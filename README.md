@@ -35,7 +35,6 @@ Run on Windows 10 20H2 (precomplied version)
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu1.png" width="600" />
 
-
 Compiled and run on Windows 8.1
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu2.png" width="600" />
@@ -43,6 +42,10 @@ Compiled and run on Windows 8.1
 Run on Windows 7 SP1 fully patched (precomplied version)
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu3.png" width="600" />
+
+Run on Windows 10 19H2 (precompiled version, SecureBoot enabled)
+
+<img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu4.png" width="600" />
 
 
 #### Limitations of -map command
@@ -79,12 +82,16 @@ This tool does not change (and this won't change in future) internal Windows str
 
 You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware.
 
-#### Currently Supported Providers
+# Currently Supported Providers
 
 + Intel Network Adapter Diagnostic Driver of version 1.03.0.7;
 + RTCore64 driver from MSI Afterburner of version 4.6.2 build 15658 and below;
 + Gdrv driver from various Gigabyte TOOLS of undefined version;
-+ ATSZIO64 driver from ASUSTeK WinFlash utility of various versions.
++ ATSZIO64 driver from ASUSTeK WinFlash utility of various versions;
++ MICSYS MsIo (WinIo) driver from Patriot Viper RGB utility of version 1.0;
++ GLCKIO2 (WinIo) driver from ASRock Polychrome RGB of version 1.0.4;
++ EneIo (WinIo) driver from G.SKILL Trident Z Lighting Control of version 1.00.08;
++ WinRing0x64 driver from EVGA Precision X1 of version 1.0.2.0.
 
 More providers maybe added in the future.
 
@@ -105,6 +112,10 @@ In order to build from source you need Microsoft Visual Studio 2019 and later ve
 
 Using this program might render your computer into BSOD. Compiled binary and source code provided AS-IS in help it will be useful BUT WITHOUT WARRANTY OF ANY KIND.
 
+# Third party code usage
+
+* TinyAES, https://github.com/kokke/tiny-AES-c
+
 # References
 
 * Turla Driver Loader, https://github.com/hfiref0x/TDL
@@ -115,6 +126,15 @@ Using this program might render your computer into BSOD. Compiled binary and sou
 * CVE-2018-19320, https://seclists.org/fulldisclosure/2018/Dec/39
 * ATSZIO64 headers and libs, https://github.com/DOGSHITD/SciDetectorApp/tree/master/DetectSciApp
 * ATSZIO64 ASUS Drivers Privilege Escalation, https://github.com/LimiQS/AsusDriversPrivEscala
+* CVE-2019-18845, https://www.activecyber.us/activelabs/viper-rgb-driver-local-privilege-escalation-cve-2019-18845
+* DEFCON27: Get off the kernel if you cant drive, https://eclypsium.com/wp-content/uploads/2019/08/EXTERNAL-Get-off-the-kernel-if-you-cant-drive-DEFCON27.pdf
+
+# Wormhole drivers code
+
+They are used in multiple products from hardware vendors mostly in unmodified state. They all break OS security model and additionally bugged. Links are for educational purposes of how not to do your drivers. Note that following github accounts have nothing to do with these code, they are just forked/uploaded it.
+
+* WinIo 3.0 BSOD/CVE generator, https://github.com/starofrainnight/winio/blob/master/Source/Drv/WinIo.c
+* WinRing0 BSOD/CVE generator, https://github.com/QCute/WinRing0/blob/master/dll/sys/OpenLibSys.c
 
 # Authors
 

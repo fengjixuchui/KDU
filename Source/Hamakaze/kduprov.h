@@ -4,9 +4,9 @@
 *
 *  TITLE:       KDUPROV.H
 *
-*  VERSION:     1.00
+*  VERSION:     1.01
 *
-*  DATE:        02 Feb 2020
+*  DATE:        13 Feb 2020
 *
 *  Provider support routines.
 *
@@ -19,12 +19,16 @@
 
 #pragma once
 
-#define KDU_PROVIDERS_MAX               4
+#define KDU_PROVIDERS_MAX               8
 
 #define KDU_PROVIDER_INTEL_NAL          0
 #define KDU_PROVIDER_UNWINDER_RTCORE    1
 #define KDU_PROVIDER_GIGABYTE_GDRV      2
 #define KDU_PROVIDER_ASUSTEK_ATSZIO     3
+#define KDU_PROVIDER_PATRIOT_MSIO64     4
+#define KDU_PROVIDER_GLCKIO2            5
+#define KDU_PROVIDER_ENEIO64            6
+#define KDU_PROVIDER_WINRING0           7
 
 #define KDU_PROVIDER_DEFAULT        KDU_PROVIDER_INTEL_NAL
 
@@ -53,6 +57,21 @@ typedef BOOL(WINAPI* provWriteKernelVM)(
     _In_ ULONG NumberOfBytes);
 
 //
+// Prototype for allocating kernel memory function.
+//
+typedef BOOL(WINAPI* provAllocateKernelVM)(
+    _In_ HANDLE DeviceHandle,
+    _In_ ULONG NumberOfBytes,
+    _Out_ PVOID* Address);
+
+//
+// Prototype for freeing kernel memory function.
+//
+typedef BOOL(WINAPI* provFreeKernelVM)(
+    _In_ HANDLE DeviceHandle,
+    _Out_ PVOID Address);
+
+//
 // Prototype for virtual to physical address translation function.
 //
 typedef BOOL(WINAPI* provVirtualToPhysical)(
@@ -75,7 +94,7 @@ typedef BOOL(WINAPI* provReadPhysicalMemory)(
 typedef BOOL(WINAPI* provWritePhysicalMemory)(
     _In_ HANDLE DeviceHandle,
     _In_ ULONG_PTR PhysicalAddress,
-    _Out_writes_bytes_(NumberOfBytes) PVOID Buffer,
+    _In_reads_bytes_(NumberOfBytes) PVOID Buffer,
     _In_ ULONG NumberOfBytes);
 
 //
@@ -97,38 +116,63 @@ typedef BOOL(WINAPI* provQueryPML4)(
 // Prototype for driver registering/unlocking function.
 //
 typedef BOOL(WINAPI* provRegisterDriver)(
-    _In_ HANDLE DeviceHandle);
+    _In_ HANDLE DeviceHandle,
+    _In_opt_ PVOID Param);
 
 //
 // Prototype for driver unregistering function.
 //
 typedef BOOL(WINAPI* provUnregisterDriver)(
-    _In_ HANDLE DeviceHandle);
+    _In_ HANDLE DeviceHandle,
+    _In_opt_ PVOID Param);
 
 typedef enum _KDU_ACTION_TYPE {
     ActionTypeMapDriver = 0,
     ActionTypeDKOM = 1,
-    ActionTypeUnspecified = 2,
+    ActionTypeDSECorruption = 2,
+    ActionTypeUnspecified = 3,
     ActionTypeMax
 } KDU_ACTION_TYPE;
+
+#define KDUPROV_FLAGS_NONE               0x00000000
+#define KDUPROV_FLAGS_SUPPORT_HVCI       0x00000001
+#define KDUPROV_FLAGS_SIGNATURE_WHQL     0x00000002 
+#define KDUPROV_FLAGS_WINIO_BASED        0x00000004
+#define KDUPROV_FLAGS_WINRING0_BASED     0x00000008
 
 typedef struct _KDU_PROVIDER {
     ULONG MaxNtBuildNumberSupport;
     ULONG ResourceId;
-    ULONG HvciSupport;
+    union {
+        ULONG Flags;
+        struct {
+            ULONG SupportHVCI : 1;
+            ULONG SignatureWHQL : 1;
+            ULONG WinIoBased : 1;
+            ULONG WinRing0Based : 1;
+            ULONG Reserved : 28;
+        };
+    };
     LPWSTR Desciption;
     LPWSTR DriverName; //only file name, e.g. PROCEXP152
     LPWSTR DeviceName; //device name, e.g. PROCEXP152
+    LPWSTR SignerName;
     struct {
+        provRegisterDriver RegisterDriver; //optional
+        provUnregisterDriver UnregisterDriver; //optional
+
+        provAllocateKernelVM AllocateKernelVM; //optional
+        provFreeKernelVM FreeKernelVM; //optional
+
         provReadKernelVM ReadKernelVM;
         provWriteKernelVM WriteKernelVM;
+
         provVirtualToPhysical VirtualToPhysical; //optional
         provReadControlRegister ReadControlRegister; //optional
+
         provQueryPML4 QueryPML4Value; //optional
         provReadPhysicalMemory ReadPhysicalMemory; //optional
         provWritePhysicalMemory WritePhysicalMemory; //optional
-        provRegisterDriver RegisterDriver; //optional
-        provUnregisterDriver UnregisterDriver; //optional
     } Callbacks;
 } KDU_PROVIDER, * PKDU_PROVIDER;
 
