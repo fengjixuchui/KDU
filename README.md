@@ -11,6 +11,7 @@
 The purpose of this tool is to give a simple way to explore Windows kernel/components without doing a lot of additional work or setting up local debugger.
 It features:
 + Protected Processes Hijacking via Process object modification;
++ Driver Signature Enforcement Overrider (similar to DSEFIx);
 + Driver loader for bypassing Driver Signature Enforcement (similar to TDL/Stryker);
 + Support of various vulnerable drivers use as functionality "providers".
 
@@ -18,11 +19,13 @@ It features:
 
 ###### KDU -ps ProcessID
 ###### KDU -map filename
+###### KDU -dse value
 ###### KDU -prv ProviderID
 ###### KDU -list
 * -prv  - optional, select vulnerability driver provider;
 * -ps 	- modify process object of given ProcessID;
 * -map  - load input file as code buffer to kernel mode and run it;
+* -dse  - write user defined value to the system DSE state flags;
 * -list - list currently available providers.
 
 Example:
@@ -30,6 +33,8 @@ Example:
 + kdu -map c:\driverless\mysuperhack.sys
 + kdu -prv 1 -ps 1234
 + kdu -prv 1 -map c:\driverless\mysuperhack.sys
++ kdu -dse 0
++ kdu -dse 6
 
 Run on Windows 10 20H2 (precomplied version)
 
@@ -92,7 +97,7 @@ You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware
 + GLCKIO2 (WinIo) driver from ASRock Polychrome RGB of version 1.0.4;
 + EneIo (WinIo) driver from G.SKILL Trident Z Lighting Control of version 1.00.08;
 + WinRing0x64 driver from EVGA Precision X1 of version 1.0.2.0;
-+ EneTechIo (WinIo) driver from TOUGHRAM Software of version 1.0.3.
++ EneTechIo (WinIo) driver from Thermaltake TOUGHRAM software of version 1.0.3.
 
 More providers maybe added in the future.
 
@@ -100,7 +105,7 @@ More providers maybe added in the future.
 
 It uses known to be vulnerable driver from legitimate software to access arbitrary kernel memory with read/write primitives.
 
-Depending on command KDU will either work as TDL or modify kernel mode process objects (EPROCESS). 
+Depending on command KDU will either work as TDL/DSEFix or modify kernel mode process objects (EPROCESS). 
 
 When in -map mode KDU will use 3rd party signed driver from SysInternals Process Explorer and hijack it by placing a small loader shellcode inside it IRP_MJ_DEVICE_CONTROL/IRP_MJ_CREATE/IRP_MJ_CLOSE handler. This is done by overwriting physical memory where Process Explorer dispatch handler located and triggering it by calling driver IRP_MJ_CREATE handler (CreateFile call). Next shellcode will map input driver as code buffer to kernel mode and run it with current IRQL be PASSIVE_LEVEL. After that hijacked Process Explorer driver will be unloaded together with vulnerable provider driver. This entire idea comes from malicious software of the middle of 200x known as rootkits.
 
@@ -119,6 +124,7 @@ Using this program might render your computer into BSOD. Compiled binary and sou
 
 # References
 
+* DSEFix, https://github.com/hfiref0x/DSEFix
 * Turla Driver Loader, https://github.com/hfiref0x/TDL
 * Stryker, https://github.com/hfiref0x/Stryker
 * Unwinding RTCore, https://swapcontext.blogspot.com/2020/01/unwinding-rtcore.html
