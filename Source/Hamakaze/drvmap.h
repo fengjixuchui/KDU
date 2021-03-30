@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020
+*  (C) COPYRIGHT AUTHORS, 2020 - 2021
 *
 *  TITLE:       DRVMAP.H
 *
-*  VERSION:     1.01
+*  VERSION:     1.02
 *
-*  DATE:        20 Apr 2020
+*  DATE:        11 Feb 2021
 *
 *  Prototypes and definitions for driver mapping.
 *
@@ -62,6 +62,22 @@ typedef VOID(NTAPI* pfnIofCompleteRequest)(
     _In_ VOID* Irp,
     _In_ CCHAR PriorityBoost);
 
+typedef NTSTATUS(NTAPI* pfnObReferenceObjectByHandle)(
+    _In_ HANDLE Handle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_TYPE ObjectType,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PVOID* Object,
+    _Out_opt_ PVOID HandleInformation);
+
+typedef VOID(NTAPI* pfnObfDereferenceObject)(
+    _In_ PVOID Object);
+
+typedef NTSTATUS(NTAPI* pfnKeSetEvent)(
+    _In_ PKEVENT Event,
+    _In_ KPRIORITY Increment,
+    _In_ _Literal_ BOOLEAN Wait);
+
 typedef struct _FUNC_TABLE {
     pfnExAllocatePool ExAllocatePool;
     pfnExFreePool ExFreePool;
@@ -71,6 +87,9 @@ typedef struct _FUNC_TABLE {
     pfnZwOpenKey ZwOpenKey;
     pfnZwQueryValueKey ZwQueryValueKey;
     pfnZwDeleteValueKey ZwDeleteValueKey;
+    pfnObReferenceObjectByHandle ObReferenceObjectByHandle;
+    pfnObfDereferenceObject ObfDereferenceObject;
+    pfnKeSetEvent KeSetEvent;
    // pfnDbgPrint DbgPrint;
 } FUNC_TABLE, * PFUNC_TABLE;
 
