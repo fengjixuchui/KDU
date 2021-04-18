@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020
+*  (C) COPYRIGHT AUTHORS, 2020 - 2021
 *
 *  TITLE:       WINRING0.CPP
 *
-*  VERSION:     1.01
+*  VERSION:     1.10
 *
-*  DATE:        14 Feb 2020
+*  DATE:        15 Apr 2021
 *
 *  WinRing0 based drivers routines.
 *
@@ -145,14 +145,15 @@ BOOL WINAPI WRZeroQueryPML4Value(
 
         }
 
-        PML4 = supGetPML4FromLowStub1M((ULONG_PTR)pbLowStub1M);
-        if (PML4)
-            *Value = PML4;
-        else
-            *Value = 0;
+        if (dwError == ERROR_SUCCESS) {
 
+            PML4 = supGetPML4FromLowStub1M((ULONG_PTR)pbLowStub1M);
+            if (PML4)
+                *Value = PML4;
+            else
+                *Value = 0;
 
-        dwError = ERROR_SUCCESS;
+        }
 
     } while (FALSE);
 
@@ -176,24 +177,12 @@ BOOL WINAPI WRZeroVirtualToPhysical(
     _In_ ULONG_PTR VirtualAddress,
     _Out_ ULONG_PTR* PhysicalAddress)
 {
-    BOOL bResult = FALSE;
-
-    if (PhysicalAddress)
-        *PhysicalAddress = 0;
-    else {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    bResult = PwVirtualToPhysical(DeviceHandle,
+    return PwVirtualToPhysical(DeviceHandle,
         WRZeroQueryPML4Value,
         WRZeroReadPhysicalMemory,
         VirtualAddress,
         PhysicalAddress);
-
-    return bResult;
 }
-
 
 /*
 * WRZeroReadKernelVirtualMemory
@@ -211,7 +200,6 @@ BOOL WINAPI WRZeroReadKernelVirtualMemory(
 {
     BOOL bResult;
     ULONG_PTR physicalAddress = 0;
-    DWORD dwError = ERROR_SUCCESS;
 
     bResult = WRZeroVirtualToPhysical(DeviceHandle,
         Address,
@@ -224,15 +212,8 @@ BOOL WINAPI WRZeroReadKernelVirtualMemory(
             Buffer,
             NumberOfBytes);
 
-        if (!bResult)
-            dwError = GetLastError();
-
-    }
-    else {
-        dwError = GetLastError();
     }
 
-    SetLastError(dwError);
     return bResult;
 }
 
@@ -252,7 +233,6 @@ BOOL WINAPI WRZeroKernelVirtualMemory(
 {
     BOOL bResult;
     ULONG_PTR physicalAddress = 0;
-    DWORD dwError = ERROR_SUCCESS;
 
     bResult = WRZeroVirtualToPhysical(DeviceHandle,
         Address,
@@ -265,14 +245,7 @@ BOOL WINAPI WRZeroKernelVirtualMemory(
             Buffer,
             NumberOfBytes);
 
-        if (!bResult)
-            dwError = GetLastError();
-
-    }
-    else {
-        dwError = GetLastError();
     }
 
-    SetLastError(dwError);
     return bResult;
 }

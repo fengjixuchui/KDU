@@ -1,14 +1,14 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020
+*  (C) COPYRIGHT AUTHORS, 2020 - 2021
 *
 *  TITLE:       ATSZIO.CPP
 *
-*  VERSION:     1.01
+*  VERSION:     1.10
 *
-*  DATE:        14 Feb 2020
+*  DATE:        15 Apr 2021
 *
-*  ASUSTeK ATSZIO WinFlash  driver routines.
+*  ASUSTeK ATSZIO WinFlash driver routines.
 *
 * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
 * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED
@@ -139,8 +139,6 @@ BOOL WINAPI AtszioQueryPML4Value(
             (PVOID)pbLowStub1M,
             sectionHandle);
 
-        dwError = ERROR_SUCCESS;
-
     } while (FALSE);
 
     SetLastError(dwError);
@@ -193,7 +191,7 @@ BOOL WINAPI AtszioReadWritePhysicalMemory(
         }
         __except (EXCEPTION_EXECUTE_HANDLER) {
             bResult = FALSE;
-            SetLastError(GetExceptionCode());
+            dwError = GetExceptionCode();
         }
 
         //
@@ -267,22 +265,11 @@ BOOL WINAPI AtszioVirtualToPhysical(
     _In_ ULONG_PTR VirtualAddress,
     _Out_ ULONG_PTR* PhysicalAddress)
 {
-    BOOL bResult = FALSE;
-
-    if (PhysicalAddress)
-        *PhysicalAddress = 0;
-    else {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    bResult = PwVirtualToPhysical(DeviceHandle,
+    return PwVirtualToPhysical(DeviceHandle,
         AtszioQueryPML4Value,
         AtszioReadPhysicalMemory,
         VirtualAddress,
         PhysicalAddress);
-
-    return bResult;
 }
 
 /*

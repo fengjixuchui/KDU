@@ -4,9 +4,9 @@
 *
 *  TITLE:       DSEFIX.CPP
 *
-*  VERSION:     1.02
+*  VERSION:     1.10
 *
-*  DATE:        11 Feb 2021
+*  DATE:        02 Apr 2021
 *
 *  CI DSE corruption related routines.
 *  Based on DSEFix v1.3
@@ -168,7 +168,10 @@ ULONG_PTR KDUQueryVariable(
 
     ModuleKernelBase = supGetModuleBaseByName(szModuleName);
     if (ModuleKernelBase == 0) {
-        printf_s("[!] Abort, could not query \"%s\" image base\r\n", szModuleName);
+        
+        supPrintfEvent(kduEventError, 
+            "[!] Abort, could not query \"%s\" image base\r\n", szModuleName);
+        
         return 0;
     }
 
@@ -211,7 +214,10 @@ ULONG_PTR KDUQueryVariable(
         //
         // Output error.
         //
-        printf_s("[!] Could not load \"%s\", GetLastError %lu\r\n", szModuleName, GetLastError());
+        supPrintfEvent(kduEventError, 
+            "[!] Could not load \"%s\", GetLastError %lu\r\n", 
+            szModuleName, 
+            GetLastError());
 
     }
 
@@ -237,7 +243,7 @@ BOOL KDUControlDSE(
     NTSTATUS ntStatus;
     SYSTEM_CODEINTEGRITY_INFORMATION state;
 
-    printf_s("[>] Entering %s\r\n", __FUNCTION__);
+    FUNCTION_ENTER_MSG(__FUNCTION__);
 
     state.CodeIntegrityOptions = 0;
     state.Length = sizeof(state);
@@ -262,7 +268,10 @@ BOOL KDUControlDSE(
             //
             if (Context->NtBuildNumber >= NT_WIN10_THRESHOLD1) {
                 if (DSEValue == 6) {
-                    printf_s("[!] DSE already enabled, nothing to do, leaving.\r\n");
+                    
+                    supPrintfEvent(kduEventError, 
+                        "[!] DSE already enabled, nothing to do, leaving.\r\n");
+                    
                     return TRUE;
                 }
             }
@@ -277,7 +286,10 @@ BOOL KDUControlDSE(
             if (Context->NtBuildNumber >= NT_WIN10_THRESHOLD1) {
 
                 if (DSEValue == 0) {
-                    printf_s("[!] DSE already disabled, nothing to do, leaving.\r\n");
+                    
+                    supPrintfEvent(kduEventError, 
+                        "[!] DSE already disabled, nothing to do, leaving.\r\n");
+                    
                     return TRUE;
                 }
             }
@@ -291,7 +303,10 @@ BOOL KDUControlDSE(
 
     variableAddress = KDUQueryVariable(Context->NtBuildNumber);
     if (variableAddress == 0) {
-        printf_s("[!] Could not query system variable address, abort.\r\n");
+
+        supPrintfEvent(kduEventError, 
+            "[!] Could not query system variable address, abort.\r\n");
+
     }
     else {
 
@@ -302,13 +317,16 @@ BOOL KDUControlDSE(
             &DSEValue,
             sizeof(DSEValue));
 
-        printf_s("%s Kernel memory %s\r\n",
+        supPrintfEvent(
+            (bResult == FALSE) ? kduEventError : kduEventNone,
+            "%s Kernel memory %s\r\n",
             (bResult == FALSE) ? "[!]" : "[+]",
             (bResult == FALSE) ? "not patched" : "patched");
+
     }
 
 
-    printf_s("[<] Leaving %s\r\n", __FUNCTION__);
+    FUNCTION_LEAVE_MSG(__FUNCTION__);
 
     return bResult;
 }

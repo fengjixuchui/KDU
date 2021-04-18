@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020
+*  (C) COPYRIGHT AUTHORS, 2020 - 2021
 *
 *  TITLE:       WINRING0.H
 *
-*  VERSION:     1.01
+*  VERSION:     1.10
 *
-*  DATE:        13 Feb 2020
+*  DATE:        15 Apr 2021
 *
 *  WinRing0 based drivers interface header.
 *
@@ -53,7 +53,7 @@ typedef struct _OLS_WRITE_MEMORY_INPUT {
 
 #pragma pack(pop)
 
-BOOL WRZeroReadPhysicalMemory(
+BOOL WINAPI WRZeroReadPhysicalMemory(
     _In_ HANDLE DeviceHandle,
     _In_ ULONG_PTR PhysicalAddress,
     _In_reads_bytes_(NumberOfBytes) PVOID Buffer,

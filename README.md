@@ -17,41 +17,47 @@ It features:
 
 #### Usage
 
-###### KDU -ps ProcessID
-###### KDU -map filename
-###### KDU -dse value
-###### KDU -prv ProviderID
 ###### KDU -list
+###### KDU -prv ProviderID
+###### KDU -ps ProcessID
+###### KDU -dse value
+###### KDU -map filename
+* -list - list currently available providers;
 * -prv  - optional, select vulnerability driver provider;
 * -ps 	- modify process object of given ProcessID;
-* -map  - load input file as code buffer to kernel mode and run it;
 * -dse  - write user defined value to the system DSE state flags;
-* -list - list currently available providers.
+* -map  - map driver to the kernel and execute it entry point, this command have dependencies listed below;
+  * -scv version - optional, select shellcode version, default 1;
+  * -drvn name - driver object name (only valid for shellcode version 3);
+  * -drvr name - optional, driver registry key name (only valid for shellcode version 3).
 
 Example:
 + kdu -ps 1234
 + kdu -map c:\driverless\mysuperhack.sys
 + kdu -prv 1 -ps 1234
 + kdu -prv 1 -map c:\driverless\mysuperhack.sys
++ kdu -prv 6 -scv 3 -drvn DrvObj -map c:\install\e3600bm.sys
++ kdu -prv 6 -scv 3 -drvn edrv -drvr e3600bl -map c:\install\e3600bl.sys
 + kdu -dse 0
 + kdu -dse 6
 
-Run on Windows 10 20H2 (precomplied version)
+Run on Windows 10 20H2*
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu1.png" width="600" />
 
-Compiled and run on Windows 8.1
+Compiled and run on Windows 8.1*
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu2.png" width="600" />
 
-Run on Windows 7 SP1 fully patched (precomplied version)
+Run on Windows 7 SP1 fully patched (precomplied version)*
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu3.png" width="600" />
 
-Run on Windows 10 19H2 (precompiled version, SecureBoot enabled)
+Run on Windows 10 19H2 (precompiled version, SecureBoot enabled)*
 
 <img src="https://raw.githubusercontent.com/hfiref0x/kdu/master/Help/kdu4.png" width="600" />
 
+###### All screenshots are from version 1.0X.
 
 #### Limitations of -map command
 
@@ -89,15 +95,21 @@ You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware
 
 # Currently Supported Providers
 
-+ Intel Network Adapter Diagnostic Driver of version 1.03.0.7;
-+ RTCore64 driver from MSI Afterburner of version 4.6.2 build 15658 and below;
-+ Gdrv driver from various Gigabyte TOOLS of undefined version;
-+ ATSZIO64 driver from ASUSTeK WinFlash utility of various versions;
-+ MICSYS MsIo (WinIo) driver from Patriot Viper RGB utility of version 1.0;
-+ GLCKIO2 (WinIo) driver from ASRock Polychrome RGB of version 1.0.4;
-+ EneIo (WinIo) driver from G.SKILL Trident Z Lighting Control of version 1.00.08;
-+ WinRing0x64 driver from EVGA Precision X1 of version 1.0.2.0;
-+ EneTechIo (WinIo) driver from Thermaltake TOUGHRAM software of version 1.0.3.
+| Provider Id | Product Vendor | Driver      | Software package                   | Code base         | Version                     |
+|:-----------:|----------------|-------------|------------------------------------|-------------------|-----------------------------|
+|      0      | Intel          | IQVM64      | Network Adapter Diagnostic Driver  | Original          | 1.03.0.7                    |
+|      1      | MSI            | RTCore64    | MSI Afterburner                    | Semi-original     | 4.6.2 build 15658 and below |
+|      2      | Gigabyte       | Gdrv        | Gigabyte TOOLS                     | MAPMEM NTDKK 3.51 | Undefined                   |
+|      3      | ASUSTeK        | ATSZIO64    | ASUSTeK WinFlash utility           | Semi-original     | Undefined                   |
+|      4      | Patriot        | MsIo64      | Patriot Viper RGB utility          | WINIO             | 1.0                         |
+|      5      | ASRock         | GLCKIO2     | ASRock Polychrome RGB              | WINIO             | 1.0.4                       |
+|      6      | G.SKILL        | EneIo64     | G.SKILL Trident Z Lighting Control | WINIO             | 1.00.08                     |
+|      7      | EVGA           | WinRing0x64 | EVGA Precision X1                  | WINRING0          | 1.0.2.0                     |
+|      8      | Thermaltake    | EneTechIo64 | Thermaltake TOUGHRAM software      | WINIO             | 1.0.3                       |
+|      9      | Huawei         | PhyMemx64   | Huawei MateBook Manager software   | WINIO             | Undefined                   |
+|      10     | Realtek        | RtkIo64     | Realtek Dash Client Utility        | PHYMEM            | Various                     |
+|      11     | MSI            | EneTechIo64 | MSI Dragon Center                  | WINIO             | Various                     |
+|      12     | LG             | LHA         | LG Device Manager                  | Semi-original     | 1.6.0.2                     |
 
 More providers maybe added in the future.
 
@@ -135,13 +147,16 @@ Using this program might render your computer into BSOD. Compiled binary and sou
 * ATSZIO64 ASUS Drivers Privilege Escalation, https://github.com/LimiQS/AsusDriversPrivEscala
 * CVE-2019-18845, https://www.activecyber.us/activelabs/viper-rgb-driver-local-privilege-escalation-cve-2019-18845
 * DEFCON27: Get off the kernel if you cant drive, https://eclypsium.com/wp-content/uploads/2019/08/EXTERNAL-Get-off-the-kernel-if-you-cant-drive-DEFCON27.pdf
+* CVE-2019-8372: Local Privilege Elevation in LG Kernel Driver, http://www.jackson-t.ca/lg-driver-lpe.html
 
 # Wormhole drivers code
 
-They are used in multiple products from hardware vendors mostly in unmodified state. They all break OS security model and additionally bugged. Links are for educational purposes of how not to do your drivers. Note that following github accounts have nothing to do with these code, they are just forked/uploaded it.
+They are used in multiple products from hardware vendors mostly in unmodified state. They all break OS security model and additionally bugged. Links are for educational purposes of how not to do your drivers. Note that following github account have nothing to do with these code, these code in unmodified state and provided only for educational purposes.
 
-* WinIo 3.0 BSOD/CVE generator, https://github.com/starofrainnight/winio/blob/master/Source/Drv/WinIo.c
-* WinRing0 BSOD/CVE generator, https://github.com/QCute/WinRing0/blob/master/dll/sys/OpenLibSys.c
+* WinIo 3.0 BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/WINIO
+* WinRing0 BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/WINRING0
+* PhyMem BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/PHYMEM
+* MapMem BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/MAPMEM
 
 # Authors
 
