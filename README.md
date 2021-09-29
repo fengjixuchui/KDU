@@ -96,20 +96,22 @@ You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware
 # Currently Supported Providers
 
 | Provider Id | Product Vendor | Driver      | Software package                   | Code base         | Version                     |
-|:-----------:|----------------|-------------|------------------------------------|-------------------|-----------------------------|
-|      0      | Intel          | IQVM64      | Network Adapter Diagnostic Driver  | Original          | 1.03.0.7                    |
-|      1      | MSI            | RTCore64    | MSI Afterburner                    | Semi-original     | 4.6.2 build 15658 and below |
-|      2      | Gigabyte       | Gdrv        | Gigabyte TOOLS                     | MAPMEM NTDKK 3.51 | Undefined                   |
-|      3      | ASUSTeK        | ATSZIO64    | ASUSTeK WinFlash utility           | Semi-original     | Undefined                   |
-|      4      | Patriot        | MsIo64      | Patriot Viper RGB utility          | WINIO             | 1.0                         |
-|      5      | ASRock         | GLCKIO2     | ASRock Polychrome RGB              | WINIO             | 1.0.4                       |
-|      6      | G.SKILL        | EneIo64     | G.SKILL Trident Z Lighting Control | WINIO             | 1.00.08                     |
-|      7      | EVGA           | WinRing0x64 | EVGA Precision X1                  | WINRING0          | 1.0.2.0                     |
-|      8      | Thermaltake    | EneTechIo64 | Thermaltake TOUGHRAM software      | WINIO             | 1.0.3                       |
-|      9      | Huawei         | PhyMemx64   | Huawei MateBook Manager software   | WINIO             | Undefined                   |
-|      10     | Realtek        | RtkIo64     | Realtek Dash Client Utility        | PHYMEM            | Various                     |
-|      11     | MSI            | EneTechIo64 | MSI Dragon Center                  | WINIO             | Various                     |
-|      12     | LG             | LHA         | LG Device Manager                  | Semi-original     | 1.6.0.2                     |
+|-------------|----------------|-------------|------------------------------------|-------------------|-----------------------------|
+| 0           | Intel          | IQVM64/Nal  | Network Adapter Diagnostic Driver  | Original          | 1.03.0.7                    |
+| 1           | MSI            | RTCore64    | MSI Afterburner                    | Semi-original     | 4.6.2 build 15658 and below |
+| 2           | Gigabyte       | Gdrv        | Gigabyte TOOLS                     | MAPMEM NTDDK 3.51 | Undefined                   |
+| 3           | ASUSTeK        | ATSZIO64    | ASUSTeK WinFlash utility           | Semi-original     | Undefined                   |
+| 4           | Patriot        | MsIo64      | Patriot Viper RGB utility          | WINIO             | 1.0                         |
+| 5           | ASRock         | GLCKIO2     | ASRock Polychrome RGB              | WINIO             | 1.0.4                       |
+| 6           | G.SKILL        | EneIo64     | G.SKILL Trident Z Lighting Control | WINIO             | 1.00.08                     |
+| 7           | EVGA           | WinRing0x64 | EVGA Precision X1                  | WINRING0          | 1.0.2.0                     |
+| 8           | Thermaltake    | EneTechIo64 | Thermaltake TOUGHRAM software      | WINIO             | 1.0.3                       |
+| 9           | Huawei         | PhyMemx64   | Huawei MateBook Manager software   | WINIO             | Undefined                   |
+| 10          | Realtek        | RtkIo64     | Realtek Dash Client Utility        | PHYMEM            | Various                     |
+| 11          | MSI            | EneTechIo64 | MSI Dragon Center                  | WINIO             | Various                     |
+| 12          | LG             | LHA         | LG Device Manager                  | Semi-original     | 1.6.0.2                     |
+| 13          | ASUSTeK        | AsIO2       | ASUS GPU Tweak                     | WINIO             | 2.1.7.1 and below           |
+| 14          | PassMark       | DirectIo64  | PassMark Performance Test          | Original          | 10.1 and below              |
 
 More providers maybe added in the future.
 
@@ -126,9 +128,13 @@ When in -map mode KDU will use 3rd party signed driver from SysInternals Process
 KDU comes with full source code.
 In order to build from source you need Microsoft Visual Studio 2019 and later versions. For driver builds you need Microsoft Windows Driver Kit 10 and/or above.
 
-# Support and Warranties
+# Utils and Notes
 
-Using this program might render your computer into BSOD. Compiled binary and source code provided AS-IS in help it will be useful BUT WITHOUT WARRANTY OF ANY KIND.
+GenAsIo2Unlock is a special utility used to generate "unlocking" resource which is required for working with AsIO2 driver. Full source of this utility included in Source\Utils\GenAsIo2Unlock. Compiled version located in Sources\Hamakaze\Utils\GenAsIo2Unlock.exe. **Warning this utility is set on execution at post-build-event for both Debug/Release configurations.** If you don't want to run precompiled version replace it with newly compiled from sources. If you remove this post-build-event newly compiled KDU will NOT BE ABLE to use AsIO2 driver (provider #13).
+
+# Disclaimer
+
+Using this program might crash your computer with BSOD. Compiled binary and source code provided AS-IS in hope it will be useful BUT WITHOUT WARRANTY OF ANY KIND. Since KDU rely on completely bugged and vulnerable drivers security of computer where it executed maybe put at risk. Make sure you understand what you do.
 
 # Third party code usage
 

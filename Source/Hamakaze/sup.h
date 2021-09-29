@@ -4,9 +4,9 @@
 *
 *  TITLE:       SUP.H
 *
-*  VERSION:     1.10
+*  VERSION:     1.11
 *
-*  DATE:        15 Apr 2021
+*  DATE:        14 May 2021
 *
 *  Support routines header file.
 *
@@ -76,6 +76,10 @@ NTSTATUS supOpenDriver(
     _In_ ACCESS_MASK DesiredAccess,
     _Out_ PHANDLE DeviceHandle);
 
+PVOID supGetLoadedModulesList(
+    _In_ BOOL ExtendedOutput,
+    _Out_opt_ PULONG ReturnLength);
+
 PVOID supGetSystemInfo(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass);
 
@@ -120,7 +124,7 @@ BOOL supQueryObjectFromHandle(
 BOOL supGetCommandLineOption(
     _In_ LPCTSTR OptionName,
     _In_ BOOL IsParametric,
-    _Out_writes_opt_z_(ValueSize) LPTSTR OptionValue,
+    _Inout_opt_ LPTSTR OptionValue,
     _In_ ULONG ValueSize,
     _Out_opt_ PULONG ParamLength);
 
@@ -155,7 +159,8 @@ NTSTATUS supCreateSystemAdminAccessSD(
 ULONG supGetTimeAsSecondsSince1970();
 
 ULONG_PTR supGetModuleBaseByName(
-    _In_ LPCSTR ModuleName);
+    _In_ LPCWSTR ModuleName,
+    _Out_opt_ PULONG ImageSize);
 
 BOOL supManageDummyDll(
     _In_ LPCWSTR lpDllName,
@@ -170,5 +175,13 @@ NTSTATUS supLoadFileForMapping(
 
 VOID supPrintfEvent(
     _In_ KDU_EVENT_TYPE Event,
-    _In_ LPCSTR Format,
+    _Printf_format_string_ LPCSTR Format,
     ...);
+
+NTSTATUS supQueryImageSize(
+    _In_ PVOID ImageBase,
+    _Out_ PSIZE_T ImageSize);
+
+NTSTATUS supConvertToAnsi(
+    _In_ LPCWSTR UnicodeString,
+    _Inout_ PANSI_STRING AnsiString);

@@ -4,9 +4,9 @@
 *
 *  TITLE:       TESTS.CPP
 *
-*  VERSION:     1.10
+*  VERSION:     1.11
 *
-*  DATE:        01 Apr 2021
+*  DATE:        14 May 2021
 *
 *  KDU tests.
 *
@@ -56,16 +56,23 @@ VOID KDUTest()
 
     RtlSecureZeroMemory(&Buffer, sizeof(Buffer));
 
-    Context = KDUProviderCreate(KDU_PROVIDER_LHA, FALSE, 7601, KDU_SHELLCODE_V1, ActionTypeMapDriver);
+    Context = KDUProviderCreate(14, FALSE, 7601, KDU_SHELLCODE_V1, ActionTypeMapDriver);
     if (Context) {
+
+        /*ULONG64 dummy = 0;
+
+        KDUReadKernelVM(Context,
+            0xfffff80afbbe6d18,
+            &dummy,
+            sizeof(dummy));*/
 
         if (supQueryObjectFromHandle(Context->DeviceHandle, &objectAddress)) {
 
-            /*Context->Provider->Callbacks.ReadPhysicalMemory(
+            Context->Provider->Callbacks.ReadPhysicalMemory(
                 Context->DeviceHandle,
                 0x1000,
                 &Buffer,
-                0x1000);*/
+                0x1000);
 
             value = 0x1234567890ABCDEF;
 

