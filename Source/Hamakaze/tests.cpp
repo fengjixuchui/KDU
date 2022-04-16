@@ -4,9 +4,9 @@
 *
 *  TITLE:       TESTS.CPP
 *
-*  VERSION:     1.12
+*  VERSION:     1.20
 *
-*  DATE:        25 Jan 2022
+*  DATE:        10 Feb 2022
 *
 *  KDU tests.
 *
@@ -49,17 +49,18 @@ VOID KDUTestLoad()
 
 VOID KDUTestDSE(PKDU_CONTEXT Context)
 {
-    ULONG_PTR g_CiOptions = 0xfffff805fc446d18;
+    ULONG_PTR g_CiOptions = 0xfffff806161f6d18;
     ULONG_PTR oldValue = 0, newValue = 0x1337, testValue = 0;
-
-    KDUReadKernelVM(Context, g_CiOptions, &oldValue, sizeof(oldValue));
+    KDU_PROVIDER* prov = Context->Provider;
+    
+    prov->Callbacks.ReadKernelVM(Context, g_CiOptions, &oldValue, sizeof(oldValue));
     Beep(0, 0);
-    KDUWriteKernelVM(Context, g_CiOptions, &newValue, sizeof(newValue));
+    prov->Callbacks.WriteKernelVM(Context, g_CiOptions, &newValue, sizeof(newValue));
     Beep(0, 0);
-    KDUReadKernelVM(Context, g_CiOptions, &testValue, sizeof(testValue));
+    prov->Callbacks.ReadKernelVM(Context, g_CiOptions, &testValue, sizeof(testValue));
     if (testValue != newValue)
         Beep(1, 1);
-    KDUWriteKernelVM(Context, g_CiOptions, &oldValue, sizeof(oldValue));
+    prov->Callbacks.WriteKernelVM(Context, g_CiOptions, &oldValue, sizeof(oldValue));
 }
 
 VOID KDUTest()
@@ -71,14 +72,14 @@ VOID KDUTest()
 
     RtlSecureZeroMemory(&Buffer, sizeof(Buffer));
 
-    Context = KDUProviderCreate(16, FALSE, 7601, KDU_SHELLCODE_V1, ActionTypeMapDriver);
+    Context = KDUProviderCreate(21, FALSE, 7601, KDU_SHELLCODE_VMAX, ActionTypeMapDriver);
     if (Context) {
 
-        KDUTestDSE(Context);
+        //KDUTestDSE(Context);
 
         //ULONG64 dummy = 0;
 
-        /*KDUReadKernelVM(Context,
+        /*Context->Provider->Callbacks.ReadKernelVM(Context,
             0xfffff80afbbe6d18,
             &dummy,
             sizeof(dummy));*/
@@ -99,10 +100,10 @@ VOID KDUTest()
 
             RtlSecureZeroMemory(&fileObject, sizeof(FILE_OBJECT));
 
-            KDUReadKernelVM(Context,
+            /*Context->Provider->Callbacks.ReadKernelVM(Context,
                 objectAddress,
                 &fileObject,
-                sizeof(FILE_OBJECT));
+                sizeof(FILE_OBJECT));*/
 
             Beep(0, 0);
 
