@@ -4,9 +4,9 @@
 *
 *  TITLE:       GLOBAL.H
 *
-*  VERSION:     1.25
+*  VERSION:     1.28
 *
-*  DATE:        17 Aug 2022
+*  DATE:        22 Nov 2022
 *
 *  Common include header file.
 *
@@ -45,6 +45,7 @@
 #include <rpc.h>
 #include <SetupAPI.h>
 #include <newdev.h>
+#include <Bcrypt.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -71,8 +72,11 @@ extern "C" {
 #pragma comment(lib, "Rpcrt4.lib")
 #pragma comment(lib, "Setupapi.lib")
 #pragma comment(lib, "Newdev.lib")
+#pragma comment(lib, "Bcrypt.lib")
 
-#include "consts.h"
+#include "shared/consts.h"
+#include "shared/kdubase.h"
+#include "sig.h"
 #include "sup.h"
 #include "compress.h"
 #include "victim.h"

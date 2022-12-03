@@ -4,9 +4,9 @@
 *
 *  TITLE:       SUP.H
 *
-*  VERSION:     1.26
+*  VERSION:     1.28
 *
-*  DATE:        15 Oct 2022
+*  DATE:        21 Nov 2022
 *
 *  Support routines header file.
 *
@@ -68,6 +68,10 @@ typedef enum _KDU_EVENT_TYPE {
     kduEventInformation,
     kduEventMax
 } KDU_EVENT_TYPE, * PKDU_EVENT_TYPE;
+
+typedef BOOL(WINAPI* pfnPhysMemEnumCallback)(
+    _In_ ULONG_PTR Address,
+    _In_ PVOID UserContext);
 
 PVOID FORCEINLINE supHeapAlloc(
     _In_ SIZE_T Size);
@@ -290,3 +294,18 @@ NTSTATUS supFilterDeviceIoControl(
     _Out_writes_bytes_to_opt_(OutBufferSize, *BytesReturned) PVOID OutBuffer,
     _In_ ULONG OutBufferSize,
     _Out_opt_ PULONG BytesReturned);
+
+ULONG_PTR supGetHalQuerySystemInformation(
+    _In_ ULONG_PTR NtOsLoadedBase,
+    _In_ ULONG_PTR NtOsMappedBase);
+
+PCM_RESOURCE_LIST supQueryPhysicalMemoryLayout(
+    VOID);
+
+BOOL supEnumeratePhysicalMemory(
+    _In_ pfnPhysMemEnumCallback Callback,
+    _In_ PVOID UserContext);
+
+BOOL supDetectMsftBlockList(
+    _In_ PBOOL Enabled,
+    _In_ BOOL Disable);
