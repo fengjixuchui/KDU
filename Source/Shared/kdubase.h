@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2022
+*  (C) COPYRIGHT AUTHORS, 2022 - 2023
 *
 *  TITLE:       KDUBASE.H
 *
-*  VERSION:     1.27
+*  VERSION:     1.31
 *
-*  DATE:        10 Nov 2022
+*  DATE:        08 Apr 2023
 *
 *  Base KDU definitions.
 *
@@ -36,6 +36,7 @@ typedef struct _KDU_DB_ENTRY {
     ULONG MaxNtBuildNumberSupport;
     ULONG ResourceId;
     ULONG ProviderId;
+    ULONG VictimId;
     KDU_SOURCEBASE DrvSourceBase;
     union {
         ULONG Flags;
@@ -48,7 +49,11 @@ typedef struct _KDU_DB_ENTRY {
             ULONG PML4FromLowStub : 1;
             ULONG NoVictim : 1;
             ULONG PhysMemoryBruteForce : 1;
-            ULONG Reserved : 24;
+            ULONG PreferPhysical : 1;
+            ULONG PreferVirtual : 1;
+            ULONG CompanionRequired : 1;
+            ULONG UseSymbols : 1;
+            ULONG Reserved : 20;
         };
     };
     ULONG SupportedShellFlags;

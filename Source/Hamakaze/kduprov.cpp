@@ -1,12 +1,12 @@
 ﻿/*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020 - 2022
+*  (C) COPYRIGHT AUTHORS, 2020 - 2023
 *
 *  TITLE:       KDUPROV.CPP
 *
-*  VERSION:     1.28
+*  VERSION:     1.31
 *
-*  DATE:        01 Dec 2022
+*  DATE:        09 Apr 2023
 *
 *  Vulnerable drivers provider abstraction layer.
 *
@@ -36,6 +36,64 @@ PKDU_DB_ENTRY KDUProviderToDbEntry(
     }
 
     return NULL;
+}
+
+/*
+* KDUProvDetectHyperV
+*
+* Purpose:
+*
+* Detect hyperv presence.
+*
+*/
+VOID KDUProvDetectHyperV(
+    VOID
+)
+{
+#define MSFT_HV "Microsoft Hv"
+#define MSFT_HV_SIZE sizeof(MSFT_HV) - sizeof(CHAR)
+#define HV_VENDOR_MAX 12
+
+    ULONG returnLength = 0;
+    SYSTEM_HYPERVISOR_DETAIL_INFORMATION hdi;
+    PHV_VENDOR_AND_MAX_FUNCTION pvi;
+    CHAR szVendor[32];
+
+    RtlSecureZeroMemory(&hdi, sizeof(hdi));
+
+    NTSTATUS ntStatus = NtQuerySystemInformation(SystemHypervisorDetailInformation,
+        &hdi, sizeof(hdi), &returnLength);
+
+    if (NT_SUCCESS(ntStatus)) {
+
+        pvi = (PHV_VENDOR_AND_MAX_FUNCTION)&hdi.HvVendorAndMaxFunction.Data;
+
+        if (RtlCompareMemory(MSFT_HV, pvi->VendorName, MSFT_HV_SIZE) == MSFT_HV_SIZE) {
+
+            supPrintfEvent(kduEventInformation, "[+] MSFT hypervisor present\r\n");
+
+        }
+        else {
+            __stosb((PBYTE)&szVendor, 0, sizeof(szVendor));
+            RtlCopyMemory(szVendor, pvi->VendorName, HV_VENDOR_MAX);
+            supPrintfEvent(kduEventInformation, "[+] The \"%s\" hypervisor present\r\n", szVendor);
+        }
+
+    }
+    else {
+
+        int CPUInfo[4] = { -1, -1, -1, -1 };
+
+        __cpuid(CPUInfo, 1);
+        if ((CPUInfo[2] >> 31) & 1) {
+            
+            __cpuid(CPUInfo, 0x40000000);
+            __stosb((PBYTE)&szVendor, 0, sizeof(szVendor));
+            RtlCopyMemory(szVendor, CPUInfo + 1, HV_VENDOR_MAX);
+            supPrintfEvent(kduEventInformation, "[+] The \"%s\" hypervisor present\r\n", szVendor);
+
+        }
+    }
 }
 
 /*
@@ -156,6 +214,18 @@ VOID KDUProvList()
         if (provData->PhysMemoryBruteForce)
             printf_s("\tProvider supports only physical memory brute-force.\r\n");
 
+        if (provData->PreferPhysical)
+            printf_s("\tPhysical memory access is preferred.\r\n");
+
+        if (provData->PreferVirtual)
+            printf_s("\tVirtual memory access is preferred.\r\n");
+
+        if (provData->CompanionRequired)
+            printf_s("\tProvider expects companion to be loaded.\r\n");
+
+        if (provData->UseSymbols)
+            printf_s("\tMS symbols are required to query internal information.\r\n");
+
         //
         // List "based" flags.
         //
@@ -254,10 +324,7 @@ BOOL KDUProvExtractVulnerableDriver(
     supHeapFree(drvBuffer);
 
     if (resourceSize != writeBytes) {
-
-        supPrintfEvent(kduEventError,
-            "[!] Unable to extract vulnerable driver, NTSTATUS (0x%lX)\r\n", ntStatus);
-
+        supShowHardError("[!] Unable to extract vulnerable driver", ntStatus);
         return FALSE;
     }
 
@@ -297,13 +364,37 @@ BOOL KDUProvLoadVulnerableDriver(
     }
     else {
 
-        supPrintfEvent(kduEventError,
-            "[!] Unable to load vulnerable driver, NTSTATUS (0x%lX)\r\n", ntStatus);
-
+        supShowHardError("[!] Unable to load vulnerable driver", ntStatus);
         DeleteFile(lpFullFileName);
     }
 
     return bLoaded;
+}
+
+/*
+* KDUProvIsAlreadyLoaded
+*
+* Purpose:
+*
+* Check if provider driver is already loaded by presence of it device object.
+*
+*/
+BOOL KDUProvIsAlreadyLoaded(
+    _In_ KDU_CONTEXT* Context
+)
+{
+    LPWSTR lpRootDirectory;
+    LPWSTR lpDeviceName = Context->Provider->LoadData->DeviceName;
+
+    switch (Context->Provider->LoadData->ProviderId) {
+    case KDU_PROVIDER_DELL_PCDOC:
+        lpRootDirectory = (LPWSTR)L"\\GLOBAL??";
+        break;
+    default:
+        lpRootDirectory = (LPWSTR)L"\\Device";
+        break;
+    }
+    return supIsObjectExists(lpRootDirectory, lpDeviceName);
 }
 
 /*
@@ -318,13 +409,12 @@ BOOL KDUProvStartVulnerableDriver(
     _In_ KDU_CONTEXT* Context
 )
 {
-    BOOL     bLoaded = FALSE;
-    LPWSTR   lpDeviceName = Context->Provider->LoadData->DeviceName;
+    BOOL bLoaded = FALSE;
 
     //
     // Check if driver already loaded.
     //
-    if (supIsObjectExists((LPWSTR)L"\\Device", lpDeviceName)) {
+    if (KDUProvIsAlreadyLoaded(Context)) {
 
         supPrintfEvent(kduEventError,
             "[!] Vulnerable driver is already loaded\r\n");
@@ -373,19 +463,18 @@ void KDUProvOpenVulnerableDriverAndRunCallbacks(
     }
 
     NTSTATUS ntStatus = supOpenDriver(Context->Provider->LoadData->DeviceName,
-        WRITE_DAC | GENERIC_WRITE | GENERIC_READ,
-        &deviceHandle);
+            SYNCHRONIZE | WRITE_DAC | GENERIC_WRITE | GENERIC_READ,
+            &deviceHandle);
 
     if (!NT_SUCCESS(ntStatus)) {
 
-        supPrintfEvent(kduEventError,
-            "[!] Unable to open vulnerable driver, NTSTATUS (0x%lX)\r\n", ntStatus);
+        supShowHardError("[!] Unable to open vulnerable driver", ntStatus);
 
     }
     else {
 
         supPrintfEvent(kduEventInformation,
-            "[+] Driver device \"%ws\" has successfully opened\r\n",
+            "[+] Driver device \"%ws\" has been opened successfully\r\n",
             Context->Provider->LoadData->DriverName);
 
         Context->DeviceHandle = deviceHandle;
@@ -423,8 +512,7 @@ void KDUProvStopVulnerableDriver(
     ntStatus = supUnloadDriver(lpDriverName, TRUE);
     if (!NT_SUCCESS(ntStatus)) {
 
-        supPrintfEvent(kduEventError,
-            "[!] Unable to unload vulnerable driver, NTSTATUS (0x%lX)\r\n", ntStatus);
+        supShowHardError("[!] Unable to unload vulnerable driver", ntStatus);
 
     }
     else {
@@ -482,8 +570,7 @@ BOOL WINAPI KDUProviderPostOpen(
 
             if (!NT_SUCCESS(ntStatus)) {
 
-                supPrintfEvent(kduEventError,
-                    "[!] Unable to set driver device security descriptor, NTSTATUS (0x%lX)\r\n", ntStatus);
+                supShowHardError("[!] Unable to set driver device security descriptor", ntStatus);
 
             }
             else {
@@ -496,8 +583,7 @@ BOOL WINAPI KDUProviderPostOpen(
         }
         else {
 
-            supPrintfEvent(kduEventError,
-                "[!] Unable to allocate security descriptor, NTSTATUS (0x%lX)\r\n", ntStatus);
+            supShowHardError("[!] Unable to allocate security descriptor", ntStatus);
 
         }
 
@@ -512,7 +598,7 @@ BOOL WINAPI KDUProviderPostOpen(
         deviceHandle,
         NtCurrentProcess(),
         &strHandle,
-        GENERIC_WRITE | GENERIC_READ,
+        SYNCHRONIZE | GENERIC_WRITE | GENERIC_READ,
         0,
         0)))
     {
@@ -668,15 +754,31 @@ HINSTANCE KDUProviderLoadDB(
         }
     }
     else {
-
-        supPrintfEvent(kduEventError,
-            "[!] Could not load drivers database, GetLastError %lu\r\n", GetLastError());
-
+        supShowWin32Error("[!] Cannot load drivers database", GetLastError());
     }
 
     FUNCTION_LEAVE_MSG(__FUNCTION__);
 
     return hInstance;
+}
+
+BOOL KDUpRwHandlersAreSet(
+    _In_opt_ PVOID ReadHandler,
+    _In_opt_ PVOID WriteHandler
+)
+{
+    if (ReadHandler == NULL ||
+        WriteHandler == NULL)
+    {
+
+        supPrintfEvent(kduEventError, "[!] Abort: selected provider does not support arbitrary kernel read/write or\r\n"\
+            "\tKDU interface is not implemented for these methods.\r\n");
+
+        return FALSE;
+
+    }
+
+    return TRUE;
 }
 
 /*
@@ -688,11 +790,11 @@ HINSTANCE KDUProviderLoadDB(
 *
 */
 BOOL KDUProviderVerifyActionType(
-    _In_ KDU_PROVIDER * Provider,
+    _In_ KDU_PROVIDER* Provider,
     _In_ KDU_ACTION_TYPE ActionType)
 {
     BOOL bResult = TRUE;
-
+    
 #ifdef _DEBUG
     return TRUE;
 #endif
@@ -713,15 +815,33 @@ BOOL KDUProviderVerifyActionType(
             return FALSE;
         }
 
-        if (Provider->LoadData->PhysMemoryBruteForce && 
-            (Provider->Callbacks.ReadPhysicalMemory == NULL || 
-             Provider->Callbacks.WritePhysicalMemory == NULL))
-        {
-            supPrintfEvent(kduEventError, "[!] Abort: selected provider does not support physical memory read/write or\r\n"\
-                "\tKDU interface is not implemented for these methods.\r\n");
-            
-            return FALSE;
+        if (Provider->LoadData->PreferPhysical || Provider->LoadData->PhysMemoryBruteForce) {
+
+            //
+            // Driver must have at least something defined.
+            //
+            BOOL bFirstTry = TRUE, bSecondTry = TRUE;
+
+            if (Provider->Callbacks.ReadPhysicalMemory == NULL ||
+                Provider->Callbacks.WritePhysicalMemory == NULL)
+            {
+                bFirstTry = FALSE;
+            }
+
+            if (Provider->Callbacks.ReadKernelVM == NULL ||
+                Provider->Callbacks.WriteKernelVM == NULL)
+            {
+                bSecondTry = FALSE;
+            }
+
+            if (bFirstTry == NULL && bSecondTry == NULL) {
+                supPrintfEvent(kduEventError, "[!] Abort: selected provider does not support arbitrary kernel read/write or\r\n"\
+                    "\tKDU interface is not implemented for these methods.\r\n");
+                return FALSE;
+            }
+
         }
+
         break;
 
     default:
@@ -735,16 +855,28 @@ BOOL KDUProviderVerifyActionType(
         //
         // Check if we can read/write.
         //
-        if (Provider->Callbacks.ReadKernelVM == NULL ||
-            Provider->Callbacks.WriteKernelVM == NULL)
-        {
 
-            supPrintfEvent(kduEventError, "[!] Abort: selected provider does not support arbitrary kernel read/write or\r\n"\
-                "\tKDU interface is not implemented for these methods.\r\n");
+        if (Provider->LoadData->PreferPhysical) {
 
-            bResult = FALSE;
+            if (!KDUpRwHandlersAreSet(
+                (PVOID)Provider->Callbacks.ReadPhysicalMemory,
+                (PVOID)Provider->Callbacks.WritePhysicalMemory))
+            {
+                bResult = FALSE;
+            }
 
         }
+        else {
+
+            if (!KDUpRwHandlersAreSet(
+                (PVOID)Provider->Callbacks.ReadKernelVM,
+                (PVOID)Provider->Callbacks.WriteKernelVM))
+            {
+                bResult = FALSE;
+            }
+
+        }
+
         break;
 
     case ActionTypeMapDriver:
@@ -857,8 +989,19 @@ PKDU_CONTEXT WINAPI KDUProviderCreate(
 
     do {
 
-        if (ProviderId >= KDUProvGetCount())
+        if (ProviderId >= KDUProvGetCount()) {
+            
+            supPrintfEvent(kduEventInformation,
+                "[+] Pprovider with id %lu is not supported, will be using default provider (0)\r\n",
+                ProviderId);
+
             ProviderId = KDU_PROVIDER_DEFAULT;
+        }
+
+        //
+        // Check HyperV
+        //
+        KDUProvDetectHyperV();
 
         //
         // Load drivers DB.
@@ -889,7 +1032,7 @@ PKDU_CONTEXT WINAPI KDUProviderCreate(
 
         ntStatus = supGetFirmwareType(&fmwType);
         if (!NT_SUCCESS(ntStatus)) {
-            printf_s("[!] Could not query firmware type, NTSTATUS (0x%lX)\r\n", ntStatus);
+            supShowHardError("[!] Failed to query firmware type", ntStatus);
         }
         else {
 
@@ -956,20 +1099,20 @@ PKDU_CONTEXT WINAPI KDUProviderCreate(
 
         ntStatus = supEnablePrivilege(SE_DEBUG_PRIVILEGE, TRUE);
         if (!NT_SUCCESS(ntStatus)) {
-
-            supPrintfEvent(kduEventError,
-                "[!] Abort: SeDebugPrivilege is not assigned! NTSTATUS (0x%lX)\r\n", ntStatus);
-
+            supShowHardError("[!] Abort: SeDebugPrivilege is not assigned!", ntStatus);
             break;
         }
 
         ntStatus = supEnablePrivilege(SE_LOAD_DRIVER_PRIVILEGE, TRUE);
         if (!NT_SUCCESS(ntStatus)) {
-
-            supPrintfEvent(kduEventError,
-                "[!] Abort: SeLoadDriverPrivilege is not assigned! NTSTATUS (0x%lX)\r\n", ntStatus);
-
+            supShowHardError("[!] Abort: SeLoadDriverPrivilege is not assigned!", ntStatus);
             break;
+        }
+
+        if (provLoadData->UseSymbols) {
+            if (!symInit()) {
+                break;
+            }
         }
 
         //
@@ -1002,7 +1145,9 @@ PKDU_CONTEXT WINAPI KDUProviderCreate(
             Context->Victim = NULL;
         }
         else {
-            Context->Victim = &g_KDUVictims[KDU_VICTIM_DEFAULT];
+            if (prov->LoadData->VictimId >= KDU_VICTIM_MAX)
+                prov->LoadData->VictimId = KDU_VICTIM_DEFAULT;
+            Context->Victim = &g_KDUVictims[prov->LoadData->VictimId];
         }
 
         PUNICODE_STRING CurrentDirectory = &NtCurrentPeb()->ProcessParameters->CurrentDirectory.DosPath;
@@ -1058,8 +1203,7 @@ PKDU_CONTEXT WINAPI KDUProviderCreate(
                         regParam))
                     {
 
-                        supPrintfEvent(kduEventError,
-                            "[!] Could not register provider driver, GetLastError %lu\r\n", GetLastError());
+                        supShowWin32Error("[!] Cannot register provider driver", GetLastError());
 
                         //
                         // This is hard error for some providers, abort execution.

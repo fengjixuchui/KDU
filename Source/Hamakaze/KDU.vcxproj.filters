@@ -138,7 +138,7 @@
     <ClCompile Include="idrv\gmer.cpp">
       <Filter>Source Files\idrv</Filter>
     </ClCompile>
-    <ClCompile Include="idrv\dbutil.cpp">
+    <ClCompile Include="idrv\dell.cpp">
       <Filter>Source Files\idrv</Filter>
     </ClCompile>
     <ClCompile Include="idrv\mimidrv.cpp">
@@ -182,6 +182,15 @@
     </ClCompile>
     <ClCompile Include="idrv\ryzen.cpp">
       <Filter>Source Files\idrv</Filter>
+    </ClCompile>
+    <ClCompile Include="idrv\hilscher.cpp">
+      <Filter>Source Files\idrv</Filter>
+    </ClCompile>
+    <ClCompile Include="idrv\lenovo.cpp">
+      <Filter>Source Files\idrv</Filter>
+    </ClCompile>
+    <ClCompile Include="sym.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -281,7 +290,7 @@
     <ClInclude Include="idrv\gmer.h">
       <Filter>Source Files\idrv</Filter>
     </ClInclude>
-    <ClInclude Include="idrv\dbutil.h">
+    <ClInclude Include="idrv\dell.h">
       <Filter>Source Files\idrv</Filter>
     </ClInclude>
     <ClInclude Include="idrv\mimidrv.h">
@@ -340,6 +349,15 @@
     </ClInclude>
     <ClInclude Include="idrv\ryzen.h">
       <Filter>Source Files\idrv</Filter>
+    </ClInclude>
+    <ClInclude Include="idrv\hilscher.h">
+      <Filter>Source Files\idrv</Filter>
+    </ClInclude>
+    <ClInclude Include="idrv\lenovo.h">
+      <Filter>Source Files\idrv</Filter>
+    </ClInclude>
+    <ClInclude Include="sym.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020 - 2022
+*  (C) COPYRIGHT AUTHORS, 2020 - 2023
 *
 *  TITLE:       TESTS.CPP
 *
-*  VERSION:     1.28
+*  VERSION:     1.31
 *
-*  DATE:        01 Dec 2022
+*  DATE:        10 Apr 2023
 *
 *  KDU tests.
 *
@@ -89,20 +89,19 @@ BOOL WINAPI TestPhysMemEnumCallback(
 {
    
     PKDU_PHYSMEM_ENUM_PARAMS Params = (PKDU_PHYSMEM_ENUM_PARAMS)UserContext;
-    PKDU_CONTEXT Context = Params->Context;
    
-    ULONG signatureSize = sizeof(ProcExpSignature);
+    ULONG signatureSize = Params->DispatchSignatureLength;
 
     BYTE buffer[PAGE_SIZE];
     RtlSecureZeroMemory(&buffer, sizeof(buffer));
 
-    if (Context->Provider->Callbacks.ReadPhysicalMemory(Context->DeviceHandle,
+    if (Params->ReadPhysicalMemory(Params->DeviceHandle,
         Address,
         &buffer,
         PAGE_SIZE))
     {
-        if (signatureSize == RtlCompareMemory(ProcExpSignature,
-            RtlOffsetToPointer(buffer, PE152_DISPATCH_PAGE_OFFSET), 
+        if (signatureSize == RtlCompareMemory(Params->DispatchSignature,
+            RtlOffsetToPointer(buffer, Params->DispatchHandlerPageOffset),
             signatureSize))
         {
             printf_s("\t Found code at address 0x%llX\r\n", Address);
@@ -116,80 +115,89 @@ BOOL WINAPI TestPhysMemEnumCallback(
 VOID TestBrute(PKDU_CONTEXT Context)
 {
     KDU_PHYSMEM_ENUM_PARAMS params;
+    VICTIM_IMAGE_INFORMATION vi;
+    HANDLE victimDeviceHandle = NULL;
 
-    params.bWrite = FALSE;
-    params.cbPayload = 0;
-    params.pvPayload = NULL;
-    params.Context = Context;
-    params.ccPagesFound = 0;
-    params.ccPagesModified = 0;
+    if (Context->Provider->Callbacks.ReadPhysicalMemory == NULL)
+        return;
 
-    if (supEnumeratePhysicalMemory(TestPhysMemEnumCallback, &params)) {
+    if (VpCreate(Context->Victim, Context->ModuleBase, &victimDeviceHandle, NULL, NULL)) {
 
-        printf_s("[+] Number of pages found: %llu\r\n", params.ccPagesFound);
+        RtlSecureZeroMemory(&vi, sizeof(vi));
+        VpQueryInformation(Context->Victim, VictimImageInformation, &vi, sizeof(vi));
 
+        params.DeviceHandle = Context->DeviceHandle;
+        params.ReadPhysicalMemory = Context->Provider->Callbacks.ReadPhysicalMemory;
+        params.WritePhysicalMemory = Context->Provider->Callbacks.WritePhysicalMemory;
+
+        params.DispatchSignature = Context->Victim->Data.DispatchSignature;
+        params.DispatchSignatureLength = Context->Victim->Data.DispatchSignatureLength;
+
+        params.DispatchHandlerOffset = vi.DispatchOffset;
+        params.DispatchHandlerPageOffset = vi.DispatchPageOffset;
+        params.JmpAddress = vi.JumpValue;
+
+        params.bWrite = FALSE;
+        params.cbPayload = 0;
+        params.pvPayload = NULL;
+        params.ccPagesFound = 0;
+        params.ccPagesModified = 0;
+
+        if (supEnumeratePhysicalMemory(TestPhysMemEnumCallback, &params)) {
+
+            printf_s("[+] Number of pages found: %llu\r\n", params.ccPagesFound);
+
+        }
     }
-   
+}
+
+VOID TestSymbols()
+{
+    if (symInit()) {
+
+        supResolveMiPteBaseAddress(0);
+
+        HMODULE hModule = LoadLibraryEx(NTOSKRNL_EXE, NULL, DONT_RESOLVE_DLL_REFERENCES);
+
+        if (hModule) {
+
+            ULONG_PTR ntosBase = supGetNtOsBase();
+
+            if (symLoadImageSymbols(NTOSKRNL_EXE, (PVOID)hModule, 0)) {
+
+                ULONG_PTR address = 0;
+
+                ///MmUnloadedDrivers
+                if (symLookupAddressBySymbol("MmUnloadedDrivers", &address)) {
+
+                    printf_s("[X] symbol address %llX\r\n\tkm address %llX\r\n",
+                        address,
+                        (ULONG_PTR)ntosBase + address - (ULONG_PTR)hModule);
+                }
+
+            }
+
+        }
+    }
 }
 
 VOID KDUTest()
 {
     PKDU_CONTEXT Context;
-    ULONG_PTR objectAddress = 0, value;
 
-    UCHAR Buffer[4096];
+   // KDUTestLoad();
 
-    RtlSecureZeroMemory(&Buffer, sizeof(Buffer));
-
-    Context = KDUProviderCreate(KDU_PROVIDER_AMD_RYZENMASTER, 
+   // TestSymbols();
+    Context = KDUProviderCreate(36, 
         FALSE, 
-        NT_WIN7_SP1, 
+        NT_WIN10_20H1, 
         KDU_SHELLCODE_V1, 
         ActionTypeMapDriver);
 
     if (Context) {
- 
-        /*Context->Provider->Callbacks.ReadPhysicalMemory(Context->DeviceHandle,
-            0x0000000072a3a000,
-            Buffer,
-            sizeof(Buffer));*/
 
         TestBrute(Context);
-        KDUTestDSE(Context);
-
-        //ULONG64 dummy = 0;
-
-        /*Context->Provider->Callbacks.ReadKernelVM(Context->DeviceHandle,
-            0xfffff80afbbe6d18,
-            &dummy,
-            sizeof(dummy));*/
-
-        if (supQueryObjectFromHandle(Context->DeviceHandle, &objectAddress)) {
-
-            /*   Context->Provider->Callbacks.ReadPhysicalMemory(
-                   Context->DeviceHandle,
-                   0x1000,
-                   &Buffer,
-                   0x1000);
-                   */
-            value = 0x1234567890ABCDEF;
-
-            //objectAddress = 0xfffff80710636d18;
-
-            FILE_OBJECT fileObject;
-
-            RtlSecureZeroMemory(&fileObject, sizeof(FILE_OBJECT));
-
-            if (Context->Provider->Callbacks.ReadKernelVM) {
-                Context->Provider->Callbacks.ReadKernelVM(Context->DeviceHandle,
-                    objectAddress,
-                    &fileObject,
-                    sizeof(FILE_OBJECT));
-
-                Beep(0, 0);
-            }
-
-        }
+        //KDUTestDSE(Context);
 
         KDUProviderRelease(Context);
     }

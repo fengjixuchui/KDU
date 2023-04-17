@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2020 - 2022
+*  (C) COPYRIGHT AUTHORS, 2020 - 2023
 *
 *  TITLE:       MAIN.CPP
 *
-*  VERSION:     1.28
+*  VERSION:     1.31
 *
-*  DATE:        01 Dec 2022
+*  DATE:        09 Apr 2023
 *
 *  Hamakaze main logic and entrypoint.
 *
@@ -28,6 +28,7 @@
 #define CMD_LIST        L"-list"
 #define CMD_SI          L"-diag"
 #define CMD_TEST        L"-test"
+#define CMD_RNG         L"-rng"
 
 #define CMD_DRVNAME     L"-drvn"
 #define CMD_DRVREG      L"-drvr"
@@ -145,6 +146,12 @@ INT KDUProcessDSEFixSwitch(
 
             if (ciVarAddress == 0) {
 
+                ciVarAddress = KDUQueryCodeIntegrityVariableSymbol(NtBuildNumber);
+
+            }
+
+            if (ciVarAddress == 0) {
+
                 supPrintfEvent(kduEventError,
                     "[!] Could not query system variable address, abort.\r\n");
 
@@ -225,10 +232,7 @@ INT KDUProcessDrvMapSwitch(
     NTSTATUS ntStatus = supLoadFileForMapping(DriverFileName, &pvImage);
 
     if ((!NT_SUCCESS(ntStatus)) || (pvImage == NULL)) {
-
-        supPrintfEvent(kduEventError,
-            "[!] Error while loading input driver file, NTSTATUS (0x%lX)\r\n", ntStatus);
-
+        supShowHardError("[!] Error while loading input driver file", ntStatus);
         return 0;
     }
     else {
@@ -300,8 +304,9 @@ INT KDUProcessCommandLine(
 #ifdef _DEBUG
 
         //
-        // Test switch, never used/present in the release build.
+        // Test switches, never used/present in the release build.
         //
+
         if (supGetCommandLineOption(CMD_TEST,
             FALSE,
             NULL,
@@ -311,7 +316,24 @@ INT KDUProcessCommandLine(
             KDUTest();
             retVal = 1;
             break;
-}
+        }
+
+        if (supGetCommandLineOption(CMD_RNG,
+            FALSE,
+            NULL,
+            0,
+            NULL))
+        {
+            DWORD dwKey = 0;
+            if (supGenRandom((PBYTE)&dwKey, sizeof(DWORD))) {
+                printf_s("[+] RNG: %lu\r\n", dwKey);
+            }
+            else {
+                printf_s("[!] RNG failed\r\n");
+            }
+            retVal = 1;
+            break;
+        }
 
 #endif
         //
@@ -523,7 +545,7 @@ int KDUMain()
     OSVERSIONINFO osv;
 
 #ifdef _DEBUG
-    printf_s("[*] Debug Mode Run\r\n");
+    printf_s("[*] Debug Mode Run, several features (like a shellcode proper generation) will be unavailable\r\n");
 #endif
 
     FUNCTION_ENTER_MSG(__FUNCTION__);
@@ -614,9 +636,11 @@ int KDUMain()
 
         }
 
-        BOOL bEnabled = FALSE;
-        if (supDetectMsftBlockList(&bEnabled, FALSE)) {
-            printf_s("[+] MSFT Driver block list is %sbled\r\n", (bEnabled) ? "ena" : "disa");
+        if (osv.dwBuildNumber >= NT_WIN10_REDSTONE5) {
+            BOOL bEnabled = FALSE;
+            if (supDetectMsftBlockList(&bEnabled, FALSE)) {
+                printf_s("[+] MSFT Driver block list is %sbled\r\n", (bEnabled) ? "ena" : "disa");
+            }
         }
 
         iResult = KDUProcessCommandLine(hvciEnabled, osv.dwBuildNumber);
@@ -640,8 +664,8 @@ VOID KDUIntroBanner()
 {
     IMAGE_NT_HEADERS* ntHeaders = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
 
-    printf_s("[#] Kernel Driver Utility v%lu.%lu.%lu (build %lu) started, (c)2020 - 2022 KDU Project\r\n"\
-        "[#] Build at %s, header checksum 0x%lX\r\n"\
+    printf_s("[#] Kernel Driver Utility v%lu.%lu.%lu (build %lu) started, (c)2020 - 2023 KDU Project\r\n"\
+        "[#] Built at %s, header checksum 0x%lX\r\n"\
         "[#] Supported x64 OS : Windows 7 and above\r\n",
         KDU_VERSION_MAJOR,
         KDU_VERSION_MINOR,

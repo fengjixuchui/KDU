@@ -135,6 +135,9 @@ You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware
 | 28          | ASRock         | AsrDrv106   | Phantom Gaming Tuning              | RWEverything      | 1.0.6 and below             |                      |
 | 29          | Arthur Liberman| ALSysIO64   | Core Temp                          | Original          | 2.0.11 and below            |                      |
 | 30          | AMD            | AMDRyzenMasterDriver  | Multiple software packages | Original          | 2.0.0.0 and below           |                      |
+| 31          | Hilscher       | physmem     | Physical Memory Viewer for Windows | Original          | 1.0.0.0                     |  Cert, Name          |
+| 32          | Lenovo         | LDD         | Lenovo Diagnostics Driver for Windows 10 and later | Original          | 1.0.4.0 and below               |  Cert, Name          |
+| 33          | Dell           | pcdsrvc_x64 | Dell PC Doctor                     | Original          | 6.2.2.0                     |                      |
 
 ###### *At commit time, data maybe inaccurate.
 
@@ -157,7 +160,7 @@ KDU uses shellcode to map input drivers and execute their DriverEntry. There are
 KDU comes with full source code.
 In order to build from source you need Microsoft Visual Studio 2019 and later versions. For driver builds you need Microsoft Windows Driver Kit 10 and/or above.
 
-Complete working binaries include: kdu.exe (main executable) and drv64.dll (drivers database). They must reside in the same directory that must have R/W access enabled for kdu.exe. All binaries MUST BE compiled in "Release" configuration.
+Complete working binaries include: kdu.exe (main executable) and drv64.dll (drivers database). They must reside in the same directory that must have R/W access enabled for kdu.exe. All binaries MUST BE compiled in "Release" configuration. In order to use providers that require Microsoft Symbols usage you need to put dbghelp.dll and symsrv.dll from the Debugging Tools For Windows into KDU directory. 
 
 # Utils and Notes
 
@@ -197,6 +200,8 @@ Using this program might crash your computer with BSOD. Compiled binary and sour
 * GhostEmperor: From ProxyLogon to kernel mode, https://securelist.com/ghostemperor-from-proxylogon-to-kernel-mode/104407/
 * KDU v1.2 release and the wonderful world of Microsoft incoherency, https://swapcontext.blogspot.com/2022/02/kdu-v12-release-and-wonderful-world-of.html
 * How to exploit a vulnerable windows driver, https://github.com/stong/CVE-2020-15368
+* CVE-2022-3699, https://github.com/alfarom256/CVE-2022-3699
+* LOLDrivers, https://www.loldrivers.io
 
 # Wormhole drivers code
 
@@ -209,4 +214,4 @@ They are used in multiple products from hardware vendors mostly in unmodified st
 
 # Authors
 
-(c) 2020 - 2022 KDU Project
+(c) 2020 - 2023 KDU Project

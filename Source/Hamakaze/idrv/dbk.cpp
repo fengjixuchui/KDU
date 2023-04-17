@@ -1,12 +1,12 @@
 /*******************************************************************************
 *
-*  (C) COPYRIGHT AUTHORS, 2022
+*  (C) COPYRIGHT AUTHORS, 2022 - 2023
 *
 *  TITLE:       DBK.CPP
 *
-*  VERSION:     1.28
+*  VERSION:     1.31
 *
-*  DATE:        01 Dec 2022
+*  DATE:        09 Apr 2023
 *
 *  Cheat Engine's DBK driver routines.
 *
@@ -296,10 +296,7 @@ BOOL DbkStartVulnerableDriver(
             bLoaded = TRUE;
         }
         else {
-
-            supPrintfEvent(kduEventError,
-                "[!] Unable to load vulnerable driver, NTSTATUS (0x%lX)\r\n", ntStatus);
-
+            supShowHardError("[!] Unable to load vulnerable driver", ntStatus);
             DeleteFile(lpFullFileName);
         }
 
@@ -590,21 +587,18 @@ BOOL DbkpMapAndExecuteCode(
 
             }
             else {
-                supPrintfEvent(kduEventError,
-                    "[!] Could not execute code, GetLastError %lu\r\n", GetLastError());
+                supShowWin32Error("[!] Failed to execute code", GetLastError());
             }
 
         }
         else {
-            supPrintfEvent(kduEventError,
-                "[!] Could not map memory, GetLastError %lu\r\n", GetLastError());
+            supShowWin32Error("[!] Failed to map memory", GetLastError());
         }
 
         DbkpFreeMemory(deviceHandle, pvPage);
     }
     else {
-        supPrintfEvent(kduEventError,
-            "[!] Could not allocate nonpaged memory, GetLastError %lu\r\n", GetLastError());
+        supShowWin32Error("[!] Failed to allocate nonpaged memory", GetLastError());
     }
 
     return bSuccess;
@@ -667,6 +661,9 @@ BOOL DbkMapDriver(
 
         bSuccess = FALSE;
     }
+
+    if (pvShellCode) 
+        ScFree(pvShellCode, ScSizeOf(Context->ShellVersion, NULL));
 
     FUNCTION_LEAVE_MSG(__FUNCTION__);
 

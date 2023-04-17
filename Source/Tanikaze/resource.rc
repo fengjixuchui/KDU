@@ -52,7 +52,7 @@ END
 
 IDR_INTEL_NAL           RCDATA                  "drv\\iQVM64.bin"
 
-IDR_PROCEXP             RCDATA                  "drv\\procexp.bin"
+IDR_PROCEXP1627         RCDATA                  "drv\\procexp1627.bin"
 
 IDR_RTCORE64            RCDATA                  "drv\\RTCore64.bin"
 
@@ -122,6 +122,14 @@ IDR_ALSYSIO64           RCDATA                  "drv\\ALSysIO64.bin"
 
 IDR_AMD_RYZENMASTER     RCDATA                  "drv\\AMDRyzenMasterDriver.bin"
 
+IDR_PHYSMEM             RCDATA                  "drv\\physmem.bin"
+
+IDR_PROCEXP1702         RCDATA                  "drv\\procexp1702.bin"
+
+IDR_LDD                 RCDATA                  "drv\\LDD.bin"
+
+IDR_PCDSRVC             RCDATA                  "drv\\pcdsrvc_x64.bin"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -129,8 +137,8 @@ IDR_AMD_RYZENMASTER     RCDATA                  "drv\\AMDRyzenMasterDriver.bin"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,1,2212
- PRODUCTVERSION 1,1,1,2212
+ FILEVERSION 1,1,3,2304
+ PRODUCTVERSION 1,1,3,2304
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -147,12 +155,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "UG North"
             VALUE "FileDescription", "Kernel Driver Utility Database"
-            VALUE "FileVersion", "1.1.1.2212"
+            VALUE "FileVersion", "1.1.3.2304"
             VALUE "InternalName", "Tanikaze.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2020 - 2022 KDU Project"
+            VALUE "LegalCopyright", "Copyright (C) 2020 - 2023 KDU Project"
             VALUE "OriginalFilename", "Tanikaze.dll"
             VALUE "ProductName", "KDU"
-            VALUE "ProductVersion", "1.1.1.2212"
+            VALUE "ProductVersion", "1.1.3.2304"
         END
     END
     BLOCK "VarFileInfo"
