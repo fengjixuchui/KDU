@@ -57,8 +57,8 @@ VOID KDUTestLoad()
 
 VOID KDUTestDSE(PKDU_CONTEXT Context)
 {
-    ULONG_PTR g_CiOptions = 0xfffff8065963a438;//need update
-    ULONG_PTR oldValue = 0, newValue = 0x6, testValue = 0;
+    ULONG_PTR g_CiOptions = 0xfffff8077d239418;//need update
+    ULONG_PTR oldValue = 0, newValue = 0x0, testValue = 0;
     KDU_PROVIDER* prov = Context->Provider;
 
     if (prov->Callbacks.ReadKernelVM) {
@@ -188,7 +188,7 @@ VOID KDUTest()
    // KDUTestLoad();
 
    // TestSymbols();
-    Context = KDUProviderCreate(36, 
+    Context = KDUProviderCreate(38, 
         FALSE, 
         NT_WIN10_20H1, 
         KDU_SHELLCODE_V1, 
@@ -196,8 +196,8 @@ VOID KDUTest()
 
     if (Context) {
 
-        TestBrute(Context);
-        //KDUTestDSE(Context);
+        //TestBrute(Context);
+        KDUTestDSE(Context);
 
         KDUProviderRelease(Context);
     }

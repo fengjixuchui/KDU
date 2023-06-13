@@ -4,9 +4,9 @@
 *
 *  TITLE:       CONSTS.H
 *
-*  VERSION:     1.12
+*  VERSION:     1.14
 *
-*  DATE:        24 Mar 2023
+*  DATE:        10 Jun 2023
 *
 *  Tanikaze helper dll (part of KDU project).
 *
@@ -533,7 +533,82 @@ KDU_DB_ENTRY gProvEntry[] = {
         (LPWSTR)L"pcdsrvc_x64",
         (LPWSTR)L"pcdsrvc_x64",
         (LPWSTR)L"PC-Doctor, Inc."
-     }
+     },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_MSI_WINIO,
+        KDU_PROVIDER_MSI_WINIO,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseWinIo,
+        KDUPROV_FLAGS_SIGNATURE_WHQL | KDUPROV_FLAGS_PML4_FROM_LOWSTUB,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"MSI Foundation Service",
+        (LPWSTR)L"WinIo",
+        (LPWSTR)L"WinIo",
+        (LPWSTR)L"Microsoft Windows Hardware Compatibility Publisher"
+     },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_HP_ETDSUPP,
+        KDU_PROVIDER_HP_ETDSUPPORT,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseNone,
+        KDUPROV_FLAGS_SIGNATURE_WHQL | KDUPROV_FLAGS_PREFER_VIRTUAL,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"ETDi Support Driver",
+        (LPWSTR)L"EtdSupport",
+        (LPWSTR)L"EtdSupport_18.0",
+        (LPWSTR)L"HP Inc."
+     },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_KEXPLORE,
+        KDU_PROVIDER_KEXPLORE,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseNone,
+        KDUPROV_FLAGS_PREFER_VIRTUAL,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"Kernel Explorer Driver",
+        (LPWSTR)L"KExplore",
+        (LPWSTR)L"KExplore",
+        (LPWSTR)L"Pavel Yosifovich"
+     },
+
+    {
+        KDU_MIN_NTBUILDNUMBER,
+        NT_WIN10_22H2,
+        IDR_KOBJEXP,
+        KDU_PROVIDER_KOBJEXP,
+        KDU_VICTIM_PE1702,
+        SourceBaseNone,
+        KDUPROV_FLAGS_NO_FORCED_SD | KDUPROV_FLAGS_PML4_FROM_LOWSTUB | KDUPROV_FLAGS_PREFER_PHYSICAL,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"Kernel Object Explorer Driver",
+        (LPWSTR)L"KObjExp",
+        (LPWSTR)L"KObjExp",
+        (LPWSTR)L"Pavel Yosifovich"
+    },
+
+    {
+        KDU_MIN_NTBUILDNUMBER,
+        NT_WIN10_22H2,
+        IDR_KREGEXP,
+        KDU_PROVIDER_KREGEXP,
+        KDU_VICTIM_PE1702,
+        SourceBaseNone,
+        KDUPROV_FLAGS_NO_FORCED_SD | KDUPROV_FLAGS_PML4_FROM_LOWSTUB | KDUPROV_FLAGS_PREFER_PHYSICAL,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"Kernel Registry Explorer Driver",
+        (LPWSTR)L"KRegExp",
+        (LPWSTR)L"KRegExp",
+        (LPWSTR)L"Pavel Yosifovich"
+    }
 
 };
 
