@@ -76,7 +76,7 @@ That mean you cannot use parameters specified at your DriverEntry as they won't 
 
 + No SEH support for target drivers;
 
-There is no SEH code in x64. Instead of this you have table of try/except/finally regions which must be in the executable image described by pointer in PE header. If there is an exception occured system handler will first look in which module that happened. Mapped drivers are not inside Windows controlled list of drivers (PsLoadedModulesList - PatchGuard protected), so nothing will be found and system will simple crash.
+There is no SEH code in x64. Instead of this you have table of try/except/finally regions which must be in the executable image described by pointer in PE header. If there is an exception occurred system handler will first look in which module that happened. Mapped drivers are not inside Windows controlled list of drivers (PsLoadedModulesList - PatchGuard protected), so nothing will be found and system will simple crash.
 
 + No driver unloading;
 
@@ -143,6 +143,7 @@ You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware
 | 36          | Pavel Yosifovich | KExplore  | Kernel Explorer                | Original          | Undefined              |                      |
 | 37          | Pavel Yosifovich | KObjExp  | Kernel Object Explorer          | Original          | Undefined              |                      |
 | 38          | Pavel Yosifovich | KRegExp  | Kernel Registry Explorer        | Original          | Undefined              |                      |
+| 39          | Inspect Element LTD | EchoDrv  | Echo AntiCheat (spyware)     | Original          | Undefined              |                      |
 
 ###### *At commit time, data maybe inaccurate.
 
@@ -173,7 +174,7 @@ GenAsIo2Unlock is a special utility used to generate "unlocking" resource which 
 
 # Reporting bugs and incompatibilities
 
-If you expirienced bug or incompatibility while using KDU with 3rd party software or OS feel free to fill the issue. However if this incompatibility is caused by your own actions such reports will be ignored. Any BSOD reports should include minidump attached or your own dump analysis (windbg !analyze -v), issues without these information will be ignored.
+If you experienced bug or incompatibility while using KDU with 3rd party software or OS feel free to fill the issue. However if this incompatibility is caused by your own actions such reports will be ignored. Any BSOD reports should include minidump attached or your own dump analysis (windbg !analyze -v), issues without these information will be ignored.
 
 Anticheat, antimalware incompatibilities will be ignored, that's your own fault.
 
@@ -207,6 +208,7 @@ Using this program might crash your computer with BSOD. Compiled binary and sour
 * How to exploit a vulnerable windows driver, https://github.com/stong/CVE-2020-15368
 * CVE-2022-3699, https://github.com/alfarom256/CVE-2022-3699
 * LOLDrivers, https://www.loldrivers.io
+* ECHOH NO, https://github.com/kite03/echoac-poc/
 
 # Wormhole drivers code
 
