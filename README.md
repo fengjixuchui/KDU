@@ -150,6 +150,8 @@ You use it at your own risk. Some lazy AV may flag this tool as hacktool/malware
 | 41          | Binalyze | IREC  | Binalyze DFIR     | Original          | 3.11.0              |                      |
 | 42          | DavidXXW | PhyDMACC  | SLIC ToolKit     | WINRING0          | 1.2.0              |                      |
 | 43          | Razer | rzpnk  | Razer Synapse     | Original          |  2.20.15.1104              |                      |
+| 44          | AMD | PdFwKrnl  | AMD Radeon™ Software (Adrenalin Edition and PRO Edition) | Original          |  23.9.1 and below             |                      |
+| 45          | AMD | AODDriver  | AMD OverDrive Driver     | Original          |  2.1.5 and below              |                      |
 
 ###### *At commit time, data maybe inaccurate.
 
@@ -218,6 +220,8 @@ Using this program might crash your computer with BSOD. Compiled binary and sour
 * ECHOH NO, https://github.com/kite03/echoac-poc/
 * NVDrv, https://github.com/zer0condition/NVDrv
 * CVE-2023-41444, https://blog.dru1d.ninja/windows-driver-exploit-development-irec-sys-a5eb45093945
+* CVE-2023-20598, https://www.amd.com/en/resources/product-security/bulletin/amd-sb-6009.html
+* CVE-2020-12928, https://h0mbre.github.io/RyzenMaster_CVE/
 
 # Wormhole drivers code
 
