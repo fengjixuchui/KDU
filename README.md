@@ -149,12 +149,18 @@ Note: Provider with Id 0 assumed as default if no -prv command is specified.
 | 37     | Pavel Yosifovich | KObjExp  | Kernel Object Explorer          | Undefined              |                      |
 | 38     | Pavel Yosifovich | KRegExp  | Kernel Registry Explorer        | Undefined              |                      |
 | 39     | Inspect Element LTD | EchoDrv  | Echo AntiCheat (spyware)  | Undefined              |  Hash                   |
-| 40     | NVidia | nvoclock  | NVidia System Utility Driver     | 7.0.0.32              |                      |
-| 41     | Binalyze | IREC  | Binalyze DFIR    | 3.11.0  |                      |
-| 42     | DavidXXW | PhyDMACC  | SLIC ToolKit     | 1.2.0  |  Page hash                    |
-| 43     | Razer | rzpnk  | Razer Synapse     |  2.20.15.1104   |                      |
-| 44     | AMD | PdFwKrnl  | AMD Radeon™ Software (Adrenalin Edition and PRO Edition) | 23.9.1 and below             |                      |
-| 45     | AMD | AODDriver  | AMD OverDrive Driver     | 2.1.5 and below              |                      |
+| 40     | NVidia         | nvoclock  | NVidia System Utility Driver     | 7.0.0.32              |                      |
+| 41     | Binalyze       | IREC  | Binalyze DFIR    | 3.11.0  |                      |
+| 42     | DavidXXW       | PhyDMACC  | SLIC ToolKit     | 1.2.0  |  Page hash                    |
+| 43     | Razer          | rzpnk  | Razer Synapse     |  2.20.15.1104   |                      |
+| 44     | AMD            | PdFwKrnl  | AMD Radeon™ Software (Adrenalin Edition and PRO Edition) | 23.9.1 and below             |                      |
+| 45     | AMD            | AODDriver  | AMD OverDrive Driver     | 2.1.5 and below              |                      |
+| 46     | Wincor Nixdorf | wnBios64  | WinBios Driver     | 1.2.0 and below              |                      |
+| 47     | EVGA  | EleetX1| EVGA ELEET X1     | 1.0.16.0 and below              |                      |
+| 48     | ASRock         | AxtuDrv  | AsRock Extreme Tuner     | Undefined              |                      |
+| 49     | ASRock         | AppShopDrv103  | ASRock APP Shop    | 1.0.58 and below       |                      |
+| 50     | ASRock         | AsrDrv107n  | ASRock Motherboard Utility    | 3.0.498 and below       |                      |
+| 51     | ASRock         | AsrDrv107  | ASRock Motherboard Utility    | 3.0.498 and below       |                      |
 
 MSFT blacklist types:
 * Cert - by certificate used to sign the driver which makes it possible to ban huge number of files at one time.
@@ -210,6 +216,12 @@ MSFT blacklist types:
 |43|Original|CVE-2017-9769|**File(SHA1):** F999709E5B00A68A0F4FA912619FE6548AD0C42D<br>**Authenticode(SHA1):** 1AC31466261A6DA69FBEB8E99D0B7B772071AC7F<br>**Page(SHA1):** 4EC299E9A539F6BC194BD3D436B24A565BD32EF4<br>**Page(SHA256):** C8CE0EE4FF58779A292B5626D9953888A1A04799E18924CB7A075095C25042E8 |
 |44|Original|CVE-2023-20598|**File(SHA1):** A24840E32071E0F64E1DFF8CA540604896811587<br>**Authenticode(SHA1):** 661A1A28950CEC3F2C3D0E72AB2A05D4A173CF9A<br>**Page(SHA1):** 869BED04EB66492AC532E36C3C6171AB34DA1A00<br>**Page(SHA256):** E5DC6305227951B05997CD147C59795991F7EDE52461D069EFE1D568DD25C580 |
 |45|Original|CVE-2020-12928|**File(SHA1):** 17D28A90EF4D3DBB083371F99943FF938F3B39F6<br>**Authenticode(SHA1):** 9A329362E340FC8363E67FB5F23A8391CB83BF00<br>**Page(SHA1):** 0BC84A62ABD3CA20305FB834592928C2317439D6<br>**Page(SHA256):** 76C7A12CDE2FDC80A6AF0A58E7698FC1F5EC8746EFB461FB07155B7065480715 |
+|46|WINIO||**File(SHA1):** AEC96520E85330594D3165C86CB92EAC34C1E095<br>**Authenticode(SHA1):** A7179D7CF5EE58276C3C42A16195A0B733F31B53<br>**Page(SHA1):** AF7FED1C68BB2D459F7778EC6D20459618CF3D26<br>**Page(SHA256):** 490B1FFC374F9CDEC57BBCE9DAD93251516DE93C7A7F3475D8AC55A6DCBB958E|
+|47|Original||**File(SHA1):** DA66B66DCA5EA8689DB903EC23E98F2C881DE6F8<br>**Authenticode(SHA1):** A8D16FED8999033126D60C656A3BA359DFAA559F<br>**Page(SHA1):** 082FBFF03465F78276D5A2066398A9D3C73DB9AB<br>**Page(SHA256):** F677A9447400EAEE6E12A88F59AAADCF6DDF8F16EC8F7612BF50AB378A9B9012|
+|48|RWEverything||**File(SHA1):** 3F6A997B04D2299BA0E9F505803E8D60D0755F44<br>**Authenticode(SHA1):** E7FAC017B371A43276E03BF5F71D437E8D377930<br>**Page(SHA1):** EE9A5A98C257F2D50030B7F3AB6D7DA805FCC150<br>**Page(SHA256):** D159D969E05C83F27F446BCC5F171A0043CC3DF0B518962CEE7ACBE30BCC02F8|
+|49|RWEverything||**File(SHA1):** 6074C2360F5DC74738873A525DFBD67EB6625986<br>**Authenticode(SHA1):** 03C523F31603C460076AD549F985DD9533734E95<br>**Page(SHA1):** 85B6FC43E943C9EB9B3DE1FF82A56870620CC1CF<br>**Page(SHA256):** A3AF7747FAC60B814FA6717B174F1199B9D163081B55AE40CEDD9983B6D033F5|
+|50|RWEverything||**File(SHA1):** 11D7E0D29AB17292FD43BDD5CCB7DA0403E50E52<br>**Authenticode(SHA1):** CA06D9FD91F7B681204B35975D5C069D0DABE276<br>**Page(SHA1):** B7693E1170B01F24A824892607C2258CA653805A<br>**Page(SHA256):** B8776F6889CF3D8252F0912DD9745F8EFF4513292DF2B2B1D484CDBC68FBAE4C|
+|51|RWEverything||**File(SHA1):** B1FAD5DA173C6A603FFFE20E0CB5F0BDCA823BD5<br>**Authenticode(SHA1):** 268073AD0B17E2161C1A2A6C5B1BDEBB7B3011B4<br>**Page(SHA1):** 0B48F35DAF8B8BC9BA4E413EF222415EAB791AE0<br>**Page(SHA256):** B073907634013A8EB65E4C8AA42535BAD08101E58B7B1489AEE395B7BE9C69E2|
 
 ###### *At commit time, data maybe inaccurate.
 
@@ -289,7 +301,9 @@ They are used in multiple products from hardware vendors mostly in unmodified st
 * WinRing0 BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/WINRING0
 * PhyMem BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/PHYMEM
 * MapMem BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/MAPMEM
+* InpOut BSOD/CVE generator, https://github.com/hfiref0x/Misc/tree/master/source/WormholeDrivers/INPOUT
+* Intel infamous driver, https://github.com/hfiref0x/Misc/tree/master/source/IntelNal
 
 # Authors
 
-(c) 2020 - 2023 KDU Project
+(c) 2020 - 2024 KDU Project

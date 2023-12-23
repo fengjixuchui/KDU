@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.41
 *
-*  DATE:        04 Nov 2023
+*  DATE:        11 Dec 2023
 *
 *  Global consts.
 *
@@ -22,7 +22,7 @@
 #define KDU_VERSION_MAJOR       1
 #define KDU_VERSION_MINOR       4
 #define KDU_VERSION_REVISION    1
-#define KDU_VERSION_BUILD       2311
+#define KDU_VERSION_BUILD       2312
 #define KDU_COPYRIGHT_YEAR      2023
 
 #define KDU_MIN_NTBUILDNUMBER   0x1DB1      //Windows 7 SP1
@@ -30,7 +30,7 @@
 
 #define IPC_GET_HANDLE          0x1337
 
-#define KDU_SYNC_MUTANT         0x2311
+#define KDU_SYNC_MUTANT         0x2312
 
 #define NT_REG_PREP             L"\\Registry\\Machine"
 #define DRIVER_REGKEY           L"%wS\\System\\CurrentControlSet\\Services\\%wS"
@@ -148,7 +148,12 @@
 #define IDR_IREC                        145
 #define IDR_AMD_PDFWKRNL                146
 #define IDR_AMD_AOD215                  147
-#define IDR_RESERVED0                   148
+#define IDR_WNBIOS64                    148
+#define IDR_EVGA_ELEETX1                149
+#define IDR_ASROCKDRV2                  150
+#define IDR_ASROCKAPPSHOP103            151
+#define IDR_ASROCKDRV3                  152
+#define IDR_ASROCKDRV4                  153
 
 //
 // Vulnerable drivers providers id
@@ -199,6 +204,12 @@
 #define KDU_PROVIDER_RAZER              43
 #define KDU_PROVIDER_AMD_PDFWKRNL       44
 #define KDU_PROVIDER_AMD_AOD215         45
+#define KDU_PROVIDER_WINCOR             46
+#define KDU_PROVIDER_EVGA_ELEETX1       47
+#define KDU_PROVIDER_ASROCK2            48
+#define KDU_PROVIDER_ASROCK3            49
+#define KDU_PROVIDER_ASROCK4            50
+#define KDU_PROVIDER_ASROCK5            51
 
 #define KDU_PROVIDER_DEFAULT KDU_PROVIDER_INTEL_NAL
 

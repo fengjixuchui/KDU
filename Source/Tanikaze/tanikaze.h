@@ -6,7 +6,7 @@
 *
 *  VERSION:     1.19
 *
-*  DATE:        04 Nov 2023
+*  DATE:        10 Dec 2023
 *
 *  Tanikaze helper dll (part of KDU project).
 *
@@ -713,7 +713,97 @@ KDU_DB_ENTRY gProvEntry[] = {
         (LPWSTR)L"AODDriver",
         (LPWSTR)L"AODDriver",
         (LPWSTR)L"Advanced Micro Devices Inc."
-    }
+    },
+
+    {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_WNBIOS64,
+        KDU_PROVIDER_WINCOR,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseWinIo,
+        KDUPROV_FLAGS_SIGNATURE_WHQL | KDUPROV_FLAGS_PML4_FROM_LOWSTUB,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"WnBios Driver",
+        (LPWSTR)L"wnBios64",
+        (LPWSTR)L"WNBIOS",
+        (LPWSTR)L"Wincor Nixdorf International GmbH"
+    },
+
+    {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_EVGA_ELEETX1,
+        KDU_PROVIDER_EVGA_ELEETX1,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseNone,
+        KDUPROV_FLAGS_SIGNATURE_WHQL | KDUPROV_FLAGS_PHYSICAL_BRUTE_FORCE,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"EVGA Low Level Driver",
+        (LPWSTR)L"EleetX1",
+        (LPWSTR)L"EleetX1",
+        (LPWSTR)L"EVGA Corp."
+    },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_ASROCKDRV2,
+        KDU_PROVIDER_ASROCK2,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseRWEverything,
+        KDUPROV_FLAGS_PHYSICAL_BRUTE_FORCE,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"RW-Everything Read & Write Driver",
+        (LPWSTR)L"AxtuDrv",
+        (LPWSTR)L"AxtuDrv",
+        (LPWSTR)L"ASROCK Incorporation"
+     },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_ASROCKAPPSHOP103,
+        KDU_PROVIDER_ASROCK3,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseRWEverything,
+        KDUPROV_FLAGS_PHYSICAL_BRUTE_FORCE,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"AppShopDrv103 Driver",
+        (LPWSTR)L"AppShopDrv103",
+        (LPWSTR)L"AppShopDrv103",
+        (LPWSTR)L"ASROCK Incorporation"
+     },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_ASROCKDRV3,
+        KDU_PROVIDER_ASROCK4,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseRWEverything,
+        KDUPROV_FLAGS_SIGNATURE_WHQL | KDUPROV_FLAGS_PHYSICAL_BRUTE_FORCE,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"ASRock IO Driver",
+        (LPWSTR)L"AsrDrv107n",
+        (LPWSTR)L"AsrDrv107n",
+        (LPWSTR)L"ASROCK INC."
+     },
+
+     {
+        KDU_MIN_NTBUILDNUMBER,
+        KDU_MAX_NTBUILDNUMBER,
+        IDR_ASROCKDRV4,
+        KDU_PROVIDER_ASROCK5,
+        KDU_VICTIM_DEFAULT,
+        SourceBaseRWEverything,
+        KDUPROV_FLAGS_SIGNATURE_WHQL | KDUPROV_FLAGS_PHYSICAL_BRUTE_FORCE,
+        KDUPROV_SC_ALL_DEFAULT,
+        (LPWSTR)L"ASRock IO Driver",
+        (LPWSTR)L"AsrDrv107",
+        (LPWSTR)L"AsrDrv107",
+        (LPWSTR)L"ASROCK INC."
+     }
 
 };
 
